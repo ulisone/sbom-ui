@@ -38,8 +38,11 @@
       </div>
     <% else %>
       <!-- Auth pages (login, register) -->
-      <div class="min-h-screen flex items-center justify-center p-4">
-        <%= render "layouts/flash" %>
+      <div class="min-h-screen flex flex-col items-center justify-center p-4">
+        <!-- Flash messages positioned at top -->
+        <div class="fixed top-4 left-1/2 -translate-x-1/2 z-50 w-full max-w-md px-4">
+          <%= render "layouts/flash" %>
+        </div>
         <%= yield %>
       </div>
     <% end %>

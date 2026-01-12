@@ -163,22 +163,26 @@
 
   /* Alerts/Flash messages */
   .alert {
-    @apply p-4 rounded-lg border;
+    @apply p-4 rounded-lg border bg-surface;
   }
 
   .alert-success {
-    @apply p-4 rounded-lg border bg-low-bg border-low/20 text-low;
+    @apply p-4 rounded-lg border border-low/30 text-low shadow-lg;
+    background-color: #0c2818;
   }
 
   .alert-error {
-    @apply p-4 rounded-lg border bg-critical-bg border-critical/20 text-critical;
+    @apply p-4 rounded-lg border border-critical/30 text-critical shadow-lg;
+    background-color: #2c1414;
   }
 
   .alert-warning {
-    @apply p-4 rounded-lg border bg-medium-bg border-medium/20 text-medium;
+    @apply p-4 rounded-lg border border-medium/30 text-medium shadow-lg;
+    background-color: #2c2414;
   }
 
   .alert-info {
-    @apply p-4 rounded-lg border bg-primary-light border-primary/20 text-primary;
+    @apply p-4 rounded-lg border border-primary/30 text-primary shadow-lg;
+    background-color: #14202c;
   }
 }
