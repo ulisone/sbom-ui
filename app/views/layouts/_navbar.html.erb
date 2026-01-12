@@ -1,0 +1,32 @@
+<header class="h-16 bg-surface border-b border-border px-6 flex items-center justify-between">
+  <div>
+    <h2 class="text-lg font-semibold text-text-primary"><%= content_for(:page_title) || controller_name.titleize %></h2>
+  </div>
+
+  <div class="flex items-center gap-4">
+    <!-- New Project button -->
+    <%= link_to new_project_path, class: "btn-primary" do %>
+      <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+      </svg>
+      New Project
+    <% end %>
+
+    <!-- User menu -->
+    <div class="relative" data-controller="dropdown">
+      <button type="button" class="flex items-center gap-2 text-text-secondary hover:text-text-primary transition-colors" data-action="click->dropdown#toggle">
+        <div class="w-8 h-8 bg-surface-hover rounded-full flex items-center justify-center">
+          <span class="text-sm font-medium"><%= current_user.email.first.upcase %></span>
+        </div>
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+        </svg>
+      </button>
+
+      <div class="hidden absolute right-0 mt-2 w-48 bg-surface border border-border rounded-lg shadow-lg py-1 z-50" data-dropdown-target="menu">
+        <%= link_to "Settings", edit_user_registration_path, class: "block px-4 py-2 text-sm text-text-secondary hover:bg-surface-hover hover:text-text-primary" %>
+        <%= button_to "Sign out", destroy_user_session_path, method: :delete, class: "w-full text-left px-4 py-2 text-sm text-text-secondary hover:bg-surface-hover hover:text-text-primary" %>
+      </div>
+    </div>
+  </div>
+</header>

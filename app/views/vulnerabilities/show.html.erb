@@ -1,0 +1,174 @@
+<% content_for(:page_title) { @vulnerability.cve_id } %>
+
+<div class="max-w-4xl mx-auto">
+  <!-- Breadcrumb -->
+  <div class="mb-6">
+    <div class="flex items-center gap-2 text-sm">
+      <%= link_to vulnerabilities_path, class: "text-text-secondary hover:text-text-primary" do %>
+        <%= t('vulnerabilities.title') %>
+      <% end %>
+      <span class="text-text-muted">/</span>
+      <span class="text-text-primary"><%= @vulnerability.cve_id %></span>
+    </div>
+  </div>
+
+  <!-- Header -->
+  <div class="card mb-6">
+    <div class="flex items-start justify-between mb-4">
+      <div>
+        <div class="flex items-center gap-3 mb-2">
+          <span class="<%= @vulnerability.severity_badge_class %> text-base px-3 py-1"><%= t("vulnerabilities.severity.#{@vulnerability.severity.downcase}") %></span>
+          <h1 class="text-2xl font-bold text-text-primary"><%= @vulnerability.cve_id %></h1>
+        </div>
+        <% if @vulnerability.title.present? %>
+          <p class="text-lg text-text-secondary"><%= @vulnerability.title %></p>
+        <% end %>
+      </div>
+      <% if @vulnerability.cvss_score.present? %>
+        <div class="text-center">
+          <div class="w-16 h-16 rounded-full flex items-center justify-center border-4 <%= cvss_color_class(@vulnerability.cvss_score) %>">
+            <span class="text-xl font-bold"><%= @vulnerability.cvss_score %></span>
+          </div>
+          <p class="text-xs text-text-muted mt-1"><%= t('vulnerabilities.labels.cvss_score') %></p>
+        </div>
+      <% end %>
+    </div>
+
+    <!-- Quick Info -->
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 p-4 bg-background rounded-lg">
+      <div>
+        <p class="text-xs text-text-muted mb-1"><%= t('vulnerabilities.labels.package') %></p>
+        <p class="text-sm text-text-primary font-medium"><%= @vulnerability.package_name %></p>
+      </div>
+      <div>
+        <p class="text-xs text-text-muted mb-1"><%= t('vulnerabilities.labels.vulnerable_version') %></p>
+        <p class="text-sm text-text-primary font-medium"><%= @vulnerability.package_version || t('vulnerabilities.severity.unknown') %></p>
+      </div>
+      <div>
+        <p class="text-xs text-text-muted mb-1"><%= t('vulnerabilities.labels.fixed_version') %></p>
+        <% if @vulnerability.has_fix? %>
+          <p class="text-sm text-low font-medium"><%= @vulnerability.fixed_version %></p>
+        <% else %>
+          <p class="text-sm text-text-muted"><%= t('vulnerabilities.status.no_fix') %></p>
+        <% end %>
+      </div>
+      <div>
+        <p class="text-xs text-text-muted mb-1"><%= t('vulnerabilities.labels.project') %></p>
+        <%= link_to @vulnerability.scan.project.name, @vulnerability.scan.project, class: "text-sm text-primary hover:underline font-medium" %>
+      </div>
+    </div>
+  </div>
+
+  <!-- Description -->
+  <% if @vulnerability.description.present? %>
+    <div class="card mb-6">
+      <h2 class="text-lg font-semibold text-text-primary mb-4"><%= t('vulnerabilities.labels.description') %></h2>
+      <p class="text-text-secondary leading-relaxed"><%= @vulnerability.description %></p>
+    </div>
+  <% end %>
+
+  <!-- Remediation -->
+  <div class="card mb-6">
+    <h2 class="text-lg font-semibold text-text-primary mb-4"><%= t('vulnerabilities.labels.remediation') %></h2>
+    <% if @vulnerability.has_fix? %>
+      <div class="p-4 bg-low-bg rounded-lg border border-low/20 mb-4">
+        <div class="flex items-center gap-3">
+          <svg class="w-5 h-5 text-low flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          <div>
+            <p class="text-text-primary font-medium"><%= t('vulnerabilities.status.fix_available') %></p>
+            <p class="text-text-secondary text-sm"><%= t('vulnerabilities.messages.upgrade_to', package: @vulnerability.package_name, version: @vulnerability.fixed_version) %></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="bg-background rounded-lg p-4 font-mono text-sm">
+        <p class="text-text-muted mb-2"># <%= t('vulnerabilities.messages.upgrade_commands', default: '업그레이드 명령어 예시:') %></p>
+        <% case detect_ecosystem(@vulnerability.package_name) %>
+        <% when :npm %>
+          <p class="text-text-primary">npm install <%= @vulnerability.package_name %>@<%= @vulnerability.fixed_version %></p>
+        <% when :pip %>
+          <p class="text-text-primary">pip install <%= @vulnerability.package_name %>==<%= @vulnerability.fixed_version %></p>
+        <% when :gem %>
+          <p class="text-text-primary">bundle update <%= @vulnerability.package_name %></p>
+        <% when :maven %>
+          <p class="text-text-primary"># pom.xml에서 버전을 <%= @vulnerability.fixed_version %>으로 수정</p>
+        <% when :go %>
+          <p class="text-text-primary">go get <%= @vulnerability.package_name %>@v<%= @vulnerability.fixed_version %></p>
+        <% when :cargo %>
+          <p class="text-text-primary">cargo update -p <%= @vulnerability.package_name %></p>
+        <% else %>
+          <p class="text-text-primary"><%= @vulnerability.package_name %>을 버전 <%= @vulnerability.fixed_version %>으로 업데이트</p>
+        <% end %>
+      </div>
+    <% else %>
+      <div class="p-4 bg-medium-bg rounded-lg border border-medium/20">
+        <div class="flex items-center gap-3">
+          <svg class="w-5 h-5 text-medium flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+          </svg>
+          <div>
+            <p class="text-text-primary font-medium"><%= t('vulnerabilities.status.no_fix') %></p>
+            <p class="text-text-secondary text-sm"><%= t('vulnerabilities.status.no_fix_advice') %></p>
+          </div>
+        </div>
+      </div>
+    <% end %>
+  </div>
+
+  <!-- References -->
+  <% if @vulnerability.reference_urls.any? %>
+    <div class="card mb-6">
+      <h2 class="text-lg font-semibold text-text-primary mb-4"><%= t('vulnerabilities.labels.references') %></h2>
+      <ul class="space-y-2">
+        <% @vulnerability.reference_urls.each do |url| %>
+          <li>
+            <a href="<%= url %>" target="_blank" rel="noopener noreferrer" class="flex items-center gap-2 text-primary hover:underline">
+              <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+              </svg>
+              <span class="truncate"><%= url %></span>
+            </a>
+          </li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <!-- Scan Context -->
+  <div class="card">
+    <h2 class="text-lg font-semibold text-text-primary mb-4"><%= t('vulnerabilities.labels.scan_details') %></h2>
+    <div class="space-y-3">
+      <div class="flex items-center justify-between py-2 border-b border-border">
+        <span class="text-text-secondary"><%= t('vulnerabilities.labels.project') %></span>
+        <%= link_to @vulnerability.scan.project.name, @vulnerability.scan.project, class: "text-text-primary hover:text-primary" %>
+      </div>
+      <div class="flex items-center justify-between py-2 border-b border-border">
+        <span class="text-text-secondary"><%= t('vulnerabilities.labels.scan_date') %></span>
+        <span class="text-text-primary"><%= @vulnerability.scan.created_at.strftime("%Y-%m-%d %H:%M") %></span>
+      </div>
+      <div class="flex items-center justify-between py-2 border-b border-border">
+        <span class="text-text-secondary"><%= t('vulnerabilities.labels.sbom_format') %></span>
+        <span class="text-text-primary"><%= @vulnerability.scan.sbom_format_display || "N/A" %></span>
+      </div>
+      <div class="flex items-center justify-between py-2">
+        <span class="text-text-secondary"><%= t('scans.messages.view_full_scan', default: '전체 스캔 보기') %></span>
+        <%= link_to t('scans.messages.go_to_scan', default: '스캔 결과로 이동'), @vulnerability.scan, class: "text-primary hover:underline" %>
+      </div>
+    </div>
+  </div>
+
+  <!-- Actions -->
+  <div class="mt-6 flex items-center gap-4">
+    <%= link_to vulnerabilities_path, class: "btn-secondary" do %>
+      <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+      </svg>
+      <%= t('vulnerabilities.messages.back_to_list', default: '취약점 목록으로') %>
+    <% end %>
+    <%= link_to @vulnerability.scan, class: "btn-secondary" do %>
+      <%= t('scans.messages.view_scan', default: '스캔 보기') %>
+    <% end %>
+  </div>
+</div>

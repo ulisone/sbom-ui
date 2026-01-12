@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+  <head>
+    <title><%= content_for(:title) || "SBOM Dashboard" %></title>
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <%= csrf_meta_tags %>
+    <%= csp_meta_tag %>
+
+    <%= yield :head %>
+
+    <link rel="icon" href="/icon.png" type="image/png">
+    <link rel="icon" href="/icon.svg" type="image/svg+xml">
+    <link rel="apple-touch-icon" href="/icon.png">
+
+    <%= stylesheet_link_tag :app, "data-turbo-track": "reload" %>
+    <%= javascript_include_tag "application", "data-turbo-track": "reload", type: "module" %>
+  </head>
+
+  <body class="min-h-screen">
+    <% if user_signed_in? %>
+      <div class="flex min-h-screen">
+        <!-- Sidebar -->
+        <%= render "layouts/sidebar" %>
+
+        <!-- Main content -->
+        <div class="flex-1 flex flex-col">
+          <!-- Top navbar -->
+          <%= render "layouts/navbar" %>
+
+          <!-- Page content -->
+          <main class="flex-1 p-6 overflow-auto">
+            <%= render "layouts/flash" %>
+            <%= yield %>
+          </main>
+        </div>
+      </div>
+    <% else %>
+      <!-- Auth pages (login, register) -->
+      <div class="min-h-screen flex items-center justify-center p-4">
+        <%= render "layouts/flash" %>
+        <%= yield %>
+      </div>
+    <% end %>
+  </body>
+</html>

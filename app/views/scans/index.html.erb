@@ -1,0 +1,89 @@
+<% content_for(:page_title) { t('scans.all_scans') } %>
+
+<div class="flex items-center justify-between mb-6">
+  <h1 class="text-2xl font-bold text-text-primary"><%= t('scans.all_scans') %></h1>
+</div>
+
+<% if @scans.any? %>
+  <div class="card">
+    <div class="table-container">
+      <table class="table">
+        <thead>
+          <tr>
+            <th><%= t('vulnerabilities.labels.project') %></th>
+            <th><%= t('scans.date') %></th>
+            <th><%= t('scans.messages.status', default: '상태') %></th>
+            <th><%= t('scans.format') %></th>
+            <th><%= t('vulnerabilities.labels.ecosystem') %></th>
+            <th><%= t('scans.dependencies') %></th>
+            <th><%= t('vulnerabilities.title') %></th>
+            <th><%= t('common.actions') %></th>
+          </tr>
+        </thead>
+        <tbody>
+          <% @scans.each do |scan| %>
+            <tr>
+              <td>
+                <%= link_to scan.project.name, scan.project, class: "text-primary hover:text-primary-hover" %>
+              </td>
+              <td class="text-text-secondary"><%= scan.created_at.strftime("%Y-%m-%d %H:%M") %></td>
+              <td>
+                <span class="badge <%= scan.completed? ? 'badge-low' : (scan.failed? ? 'badge-critical' : 'badge-medium') %>">
+                  <%= t("scans.status.#{scan.status}") %>
+                </span>
+              </td>
+              <td><%= scan.sbom_format_display || "-" %></td>
+              <td><%= scan.ecosystem || "-" %></td>
+              <td><%= scan.dependencies.count %></td>
+              <td>
+                <% summary = scan.vulnerability_summary %>
+                <div class="flex items-center gap-1">
+                  <% if summary[:critical] > 0 %>
+                    <span class="badge-critical"><%= summary[:critical] %></span>
+                  <% end %>
+                  <% if summary[:high] > 0 %>
+                    <span class="badge-high"><%= summary[:high] %></span>
+                  <% end %>
+                  <% if summary[:medium] > 0 %>
+                    <span class="badge-medium"><%= summary[:medium] %></span>
+                  <% end %>
+                  <% if summary[:low] > 0 %>
+                    <span class="badge-low"><%= summary[:low] %></span>
+                  <% end %>
+                  <% if summary.values.sum == 0 %>
+                    <span class="text-text-muted">0</span>
+                  <% end %>
+                </div>
+              </td>
+              <td>
+                <div class="flex items-center gap-2">
+                  <%= link_to scan_path(scan), class: "text-primary hover:text-primary-hover" do %>
+                    <%= t('common.view') %>
+                  <% end %>
+                  <% if scan.completed? && scan.sbom_content.present? %>
+                    <%= button_to rescan_scan_path(scan), method: :post, class: "text-text-secondary hover:text-primary", title: t('scans.rescan') do %>
+                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                      </svg>
+                    <% end %>
+                  <% end %>
+                </div>
+              </td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+<% else %>
+  <div class="card text-center py-12">
+    <svg class="w-16 h-16 text-text-muted mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+    </svg>
+    <h3 class="text-lg font-medium text-text-primary mb-2"><%= t('scans.messages.no_scans') %></h3>
+    <p class="text-text-secondary mb-6"><%= t('scans.messages.no_scans_description') %></p>
+    <%= link_to projects_path, class: "btn-primary" do %>
+      <%= t('projects.go_to_projects') %>
+    <% end %>
+  </div>
+<% end %>

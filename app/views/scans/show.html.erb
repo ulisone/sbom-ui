@@ -1,0 +1,159 @@
+<% content_for(:page_title) { t('scans.scan_results') } %>
+
+<%= turbo_stream_from "scan_#{@scan.id}" %>
+
+<div class="flex items-center justify-between mb-6">
+  <div>
+    <div class="flex items-center gap-2 mb-2">
+      <%= link_to projects_path, class: "text-text-secondary hover:text-text-primary" do %>
+        <%= t('projects.title') %>
+      <% end %>
+      <span class="text-text-muted">/</span>
+      <%= link_to @scan.project.name, @scan.project, class: "text-text-secondary hover:text-text-primary" %>
+      <span class="text-text-muted">/</span>
+      <span class="text-text-primary"><%= t('scans.title') %></span>
+    </div>
+    <%= render "scans/status", scan: @scan %>
+  </div>
+
+  <div class="flex items-center gap-2">
+    <% if @scan.completed? && @scan.sbom_content.present? %>
+      <%= button_to rescan_scan_path(@scan), method: :post, class: "btn-secondary", data: { turbo_confirm: t('scans.rescan_confirm') } do %>
+        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+        </svg>
+        <%= t('scans.rescan') %>
+      <% end %>
+      <%= link_to download_sbom_scan_path(@scan), class: "btn-secondary" do %>
+        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+        </svg>
+        <%= t('scans.download_sbom') %>
+      <% end %>
+    <% end %>
+    <%= link_to new_project_scan_path(@scan.project), class: "btn-primary" do %>
+      <%= t('scans.new_scan') %>
+    <% end %>
+  </div>
+</div>
+
+<div id="scan_content">
+  <% if @scan.processing? || @scan.pending? %>
+    <!-- Processing State -->
+    <div class="card text-center py-12" data-controller="scan-status" data-scan-status-url-value="<%= status_scan_path(@scan) %>">
+      <div class="animate-spin w-12 h-12 border-4 border-primary border-t-transparent rounded-full mx-auto mb-4"></div>
+      <h3 class="text-lg font-medium text-text-primary mb-2"><%= t('scans.messages.scanning_in_progress') %></h3>
+      <p class="text-text-secondary"><%= t('scans.messages.scanning_description') %></p>
+    </div>
+  <% elsif @scan.failed? %>
+    <!-- Failed State -->
+    <div class="card text-center py-12">
+      <svg class="w-12 h-12 text-critical mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+      </svg>
+      <h3 class="text-lg font-medium text-text-primary mb-2"><%= t('scans.messages.scan_failed') %></h3>
+      <p class="text-text-secondary mb-4"><%= t('scans.messages.scan_failed_description') %></p>
+      <%= link_to new_project_scan_path(@scan.project), class: "btn-primary" do %>
+        <%= t('scans.messages.try_again') %>
+      <% end %>
+    </div>
+  <% else %>
+    <!-- Vulnerability Summary -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+      <% summary = @scan.vulnerability_summary %>
+      <div class="card flex items-center gap-4">
+        <div class="w-10 h-10 bg-critical-bg rounded-lg flex items-center justify-center">
+          <span class="text-critical font-bold"><%= summary[:critical] %></span>
+        </div>
+        <p class="text-text-secondary text-sm"><%= t('vulnerabilities.severity.critical') %></p>
+      </div>
+      <div class="card flex items-center gap-4">
+        <div class="w-10 h-10 bg-high-bg rounded-lg flex items-center justify-center">
+          <span class="text-high font-bold"><%= summary[:high] %></span>
+        </div>
+        <p class="text-text-secondary text-sm"><%= t('vulnerabilities.severity.high') %></p>
+      </div>
+      <div class="card flex items-center gap-4">
+        <div class="w-10 h-10 bg-medium-bg rounded-lg flex items-center justify-center">
+          <span class="text-medium font-bold"><%= summary[:medium] %></span>
+        </div>
+        <p class="text-text-secondary text-sm"><%= t('vulnerabilities.severity.medium') %></p>
+      </div>
+      <div class="card flex items-center gap-4">
+        <div class="w-10 h-10 bg-low-bg rounded-lg flex items-center justify-center">
+          <span class="text-low font-bold"><%= summary[:low] %></span>
+        </div>
+        <p class="text-text-secondary text-sm"><%= t('vulnerabilities.severity.low') %></p>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <!-- Vulnerabilities -->
+      <div class="card lg:col-span-2">
+        <h3 class="text-lg font-semibold text-text-primary mb-4"><%= t('vulnerabilities.title') %> (<%= @vulnerabilities.count %>)</h3>
+
+        <% if @vulnerabilities.any? %>
+          <div class="space-y-4">
+            <% @vulnerabilities.each do |vuln| %>
+              <%= link_to vulnerability_path(vuln), class: "block p-4 bg-background rounded-lg border border-border hover:border-primary transition-colors" do %>
+                <div class="flex items-start justify-between mb-2">
+                  <div>
+                    <div class="flex items-center gap-2">
+                      <span class="<%= vuln.severity_badge_class %>"><%= t("vulnerabilities.severity.#{vuln.severity.downcase}") %></span>
+                      <span class="font-mono text-sm text-text-primary"><%= vuln.cve_id %></span>
+                    </div>
+                    <% if vuln.title.present? %>
+                      <p class="text-text-primary mt-1"><%= vuln.title %></p>
+                    <% end %>
+                  </div>
+                  <% if vuln.cvss_score.present? %>
+                    <span class="text-text-secondary text-sm"><%= t('vulnerabilities.labels.cvss_score') %>: <%= vuln.cvss_score %></span>
+                  <% end %>
+                </div>
+
+                <div class="flex items-center gap-4 text-sm text-text-secondary">
+                  <span><%= t('vulnerabilities.labels.package') %>: <span class="text-text-primary"><%= vuln.affected_package %></span></span>
+                  <% if vuln.has_fix? %>
+                    <span><%= t('vulnerabilities.labels.fixed_version') %>: <span class="text-low"><%= vuln.fixed_version %></span></span>
+                  <% end %>
+                </div>
+
+                <% if vuln.description.present? %>
+                  <p class="text-text-secondary text-sm mt-2 line-clamp-2"><%= vuln.description %></p>
+                <% end %>
+              <% end %>
+            <% end %>
+          </div>
+        <% else %>
+          <div class="text-center py-8">
+            <svg class="w-12 h-12 text-low mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <p class="text-text-secondary"><%= t('vulnerabilities.messages.no_vulnerabilities') %></p>
+          </div>
+        <% end %>
+      </div>
+
+      <!-- Dependencies -->
+      <div class="card lg:col-span-1">
+        <h3 class="text-lg font-semibold text-text-primary mb-4"><%= t('scans.dependencies') %> (<%= @dependencies.count %>)</h3>
+
+        <% if @dependencies.any? %>
+          <div class="max-h-96 overflow-y-auto space-y-2">
+            <% @dependencies.each do |dep| %>
+              <div class="flex items-center justify-between py-2 border-b border-border last:border-0">
+                <div>
+                  <p class="text-sm text-text-primary"><%= dep.name %></p>
+                  <p class="text-xs text-text-muted"><%= dep.ecosystem %></p>
+                </div>
+                <span class="text-xs text-text-secondary font-mono"><%= dep.version %></span>
+              </div>
+            <% end %>
+          </div>
+        <% else %>
+          <p class="text-text-secondary text-center py-4"><%= t('scans.no_dependencies') %></p>
+        <% end %>
+      </div>
+    </div>
+  <% end %>
+</div>

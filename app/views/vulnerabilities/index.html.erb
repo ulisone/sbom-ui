@@ -1,0 +1,88 @@
+<% content_for(:page_title) { t('vulnerabilities.all_vulnerabilities') } %>
+
+<div class="flex items-center justify-between mb-6">
+  <h1 class="text-2xl font-bold text-text-primary"><%= t('vulnerabilities.all_vulnerabilities') %></h1>
+
+  <!-- Filters -->
+  <div class="flex items-center gap-2">
+    <%= link_to vulnerabilities_path, class: "badge #{params[:severity].blank? ? 'bg-primary text-white' : ''}" do %>
+      <%= t('common.all', default: '전체') %>
+    <% end %>
+    <%= link_to vulnerabilities_path(severity: 'critical'), class: "badge-critical #{params[:severity] == 'critical' ? 'ring-2 ring-critical' : ''}" do %>
+      <%= t('vulnerabilities.severity.critical') %> (<%= @severity_counts['CRITICAL'] || 0 %>)
+    <% end %>
+    <%= link_to vulnerabilities_path(severity: 'high'), class: "badge-high #{params[:severity] == 'high' ? 'ring-2 ring-high' : ''}" do %>
+      <%= t('vulnerabilities.severity.high') %> (<%= @severity_counts['HIGH'] || 0 %>)
+    <% end %>
+    <%= link_to vulnerabilities_path(severity: 'medium'), class: "badge-medium #{params[:severity] == 'medium' ? 'ring-2 ring-medium' : ''}" do %>
+      <%= t('vulnerabilities.severity.medium') %> (<%= @severity_counts['MEDIUM'] || 0 %>)
+    <% end %>
+    <%= link_to vulnerabilities_path(severity: 'low'), class: "badge-low #{params[:severity] == 'low' ? 'ring-2 ring-low' : ''}" do %>
+      <%= t('vulnerabilities.severity.low') %> (<%= @severity_counts['LOW'] || 0 %>)
+    <% end %>
+  </div>
+</div>
+
+<% if @vulnerabilities.any? %>
+  <div class="card">
+    <div class="space-y-4">
+      <% @vulnerabilities.each do |vuln| %>
+        <div class="p-4 bg-background rounded-lg border border-border hover:border-primary/50 transition-colors">
+          <div class="flex items-start justify-between mb-2">
+            <div>
+              <div class="flex items-center gap-2 mb-1">
+                <span class="<%= vuln.severity_badge_class %>"><%= t("vulnerabilities.severity.#{vuln.severity.downcase}") %></span>
+                <span class="font-mono text-sm text-text-primary"><%= vuln.cve_id %></span>
+              </div>
+              <% if vuln.title.present? %>
+                <p class="text-text-primary font-medium"><%= vuln.title %></p>
+              <% end %>
+            </div>
+            <div class="text-right">
+              <% if vuln.cvss_score.present? %>
+                <span class="text-text-secondary text-sm"><%= t('vulnerabilities.labels.cvss_score') %>: <%= vuln.cvss_score %></span>
+              <% end %>
+            </div>
+          </div>
+
+          <div class="flex items-center gap-4 text-sm text-text-secondary mb-2">
+            <span>
+              <%= t('vulnerabilities.labels.project') %>: <%= link_to vuln.scan.project.name, vuln.scan.project, class: "text-primary hover:text-primary-hover" %>
+            </span>
+            <span><%= t('vulnerabilities.labels.package') %>: <span class="text-text-primary"><%= vuln.affected_package %></span></span>
+            <% if vuln.has_fix? %>
+              <span><%= t('vulnerabilities.labels.fixed_version') %>: <span class="text-low"><%= vuln.fixed_version %></span></span>
+            <% end %>
+          </div>
+
+          <% if vuln.description.present? %>
+            <p class="text-text-secondary text-sm line-clamp-2"><%= vuln.description %></p>
+          <% end %>
+
+          <% if vuln.reference_urls.any? %>
+            <div class="mt-2 flex items-center gap-2">
+              <% vuln.reference_urls.first(3).each do |url| %>
+                <%= link_to url, url, target: "_blank", class: "text-xs text-primary hover:text-primary-hover truncate max-w-xs" %>
+              <% end %>
+            </div>
+          <% end %>
+        </div>
+      <% end %>
+    </div>
+  </div>
+<% else %>
+  <div class="card text-center py-12">
+    <svg class="w-16 h-16 text-low mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+    </svg>
+    <h3 class="text-lg font-medium text-text-primary mb-2"><%= t('vulnerabilities.messages.no_vulnerabilities') %></h3>
+    <p class="text-text-secondary">
+      <% if params[:severity].present? %>
+        <%= t("vulnerabilities.severity.#{params[:severity]}") %> <%= t('vulnerabilities.messages.no_severity_vulnerabilities', default: '심각도의 취약점이 없습니다.') %>
+        <%= link_to t('common.view_all', default: '전체 보기'), vulnerabilities_path, class: "text-primary hover:text-primary-hover" %>
+      <% else %>
+        <%= t('vulnerabilities.messages.run_scan_suggestion', default: '스캔을 실행하여 의존성에서 취약점을 확인하세요.') %>
+      <% end %>
+    </p>
+  </div>
+<% end %>
