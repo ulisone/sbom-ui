@@ -20,6 +20,28 @@ Rails.application.routes.draw do
     end
 
     resources :vulnerabilities, only: [:index, :show]
+
+    # API routes for SBOM Engine integration
+    namespace :api do
+      namespace :v1 do
+        # SBOM Engine status and direct operations
+        get "sbom_engine/status", to: "sbom_engine#status"
+        post "sbom_engine/inspect", to: "sbom_engine#inspect"
+        get "sbom_engine/progress/:task_id", to: "sbom_engine#progress"
+        get "sbom_engine/result/:task_id", to: "sbom_engine#result"
+
+        # Vulnerability queries via SBOM Engine
+        get "vulnerabilities/cve", to: "vulnerabilities#cve"
+        get "vulnerabilities/cwe", to: "vulnerabilities#cwe"
+        get "vulnerabilities/ghsa", to: "vulnerabilities#ghsa"
+        get "vulnerabilities/kev", to: "vulnerabilities#kev"
+        get "vulnerabilities/osv", to: "vulnerabilities#osv"
+        get "vulnerabilities/search", to: "vulnerabilities#search"
+
+        # License information
+        resources :licenses, only: [:index]
+      end
+    end
   end
 
   # Unauthenticated root

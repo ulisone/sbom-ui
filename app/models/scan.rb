@@ -8,6 +8,7 @@ class Scan < ApplicationRecord
 
   validates :status, presence: true
   validates :sbom_format, inclusion: { in: %w[cyclonedx spdx], allow_nil: true }
+  validates :scan_mode, inclusion: { in: %w[local sbom_engine], allow_nil: true }
 
   enum :status, {
     pending: "pending",
@@ -20,6 +21,7 @@ class Scan < ApplicationRecord
   scope :completed, -> { where(status: :completed) }
 
   ECOSYSTEMS = %w[npm pypi rubygems maven go nuget cargo].freeze
+  SCAN_MODES = %w[local sbom_engine].freeze
 
   def vulnerability_summary
     {
@@ -45,5 +47,17 @@ class Scan < ApplicationRecord
   def duration
     return nil unless scanned_at && created_at
     scanned_at - created_at
+  end
+
+  def use_sbom_engine?
+    scan_mode == "sbom_engine"
+  end
+
+  def scan_mode_display
+    case scan_mode
+    when "sbom_engine" then "SBOM Engine"
+    when "local" then "Local (Trivy)"
+    else "Local"
+    end
   end
 end

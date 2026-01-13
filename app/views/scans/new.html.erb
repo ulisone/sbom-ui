@@ -25,6 +25,31 @@
         </div>
       <% end %>
 
+      <!-- Scan Mode Selection -->
+      <% if Rails.configuration.sbom_engine[:enabled] %>
+      <div>
+        <%= f.label :scan_mode, "Scan Engine", class: "label" %>
+        <div class="grid grid-cols-2 gap-4 mt-2">
+          <label class="card-hover cursor-pointer flex items-center gap-3 p-4">
+            <%= f.radio_button :scan_mode, "sbom_engine", checked: true, class: "w-4 h-4 text-primary" %>
+            <div>
+              <p class="font-medium text-text-primary">SBOM Engine</p>
+              <p class="text-sm text-text-secondary">Enterprise API (Recommended)</p>
+            </div>
+          </label>
+          <label class="card-hover cursor-pointer flex items-center gap-3 p-4">
+            <%= f.radio_button :scan_mode, "local", class: "w-4 h-4 text-primary" %>
+            <div>
+              <p class="font-medium text-text-primary">Local Scanner</p>
+              <p class="text-sm text-text-secondary">Trivy Docker Container</p>
+            </div>
+          </label>
+        </div>
+      </div>
+      <% else %>
+        <%= f.hidden_field :scan_mode, value: "local" %>
+      <% end %>
+
       <!-- SBOM Format Selection -->
       <div>
         <%= f.label :sbom_format, "SBOM Format", class: "label" %>

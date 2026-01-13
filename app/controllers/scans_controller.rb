@@ -33,14 +33,14 @@ class ScansController < ApplicationController
       end
 
       if @scan.save
-        GitScanJob.perform_later(@scan.id)
+        enqueue_scan_job(@scan, source: :repository)
         redirect_to @scan, notice: "Git repository scan started. Results will be available shortly."
       else
         render :new, status: :unprocessable_entity
       end
     elsif scan_params[:dependency_files].present?
       if @scan.save
-        ScanJob.perform_later(@scan.id)
+        enqueue_scan_job(@scan, source: :files)
         redirect_to @scan, notice: "Scan started. Results will be available shortly."
       else
         render :new, status: :unprocessable_entity
@@ -98,13 +98,27 @@ class ScansController < ApplicationController
     # Copy SBOM content
     new_scan.update!(sbom_content: @scan.sbom_content)
 
-    # Run vulnerability scan only
-    RescanJob.perform_later(new_scan.id)
+    # Run vulnerability scan only - use appropriate job based on scan mode
+    if new_scan.use_sbom_engine?
+      SbomEngineRescanJob.perform_later(new_scan.id)
+    else
+      RescanJob.perform_later(new_scan.id)
+    end
 
     redirect_to new_scan, notice: "Re-scanning vulnerabilities. Results will be available shortly."
   end
 
   private
+
+  def enqueue_scan_job(scan, source:)
+    if scan.use_sbom_engine?
+      SbomEngineScanJob.perform_later(scan.id)
+    elsif source == :repository
+      GitScanJob.perform_later(scan.id)
+    else
+      ScanJob.perform_later(scan.id)
+    end
+  end
 
   def set_scan
     @scan = current_user.scans.find(params[:id])
@@ -115,6 +129,6 @@ class ScansController < ApplicationController
   end
 
   def scan_params
-    params.require(:scan).permit(:sbom_format, dependency_files: [])
+    params.require(:scan).permit(:sbom_format, :scan_mode, dependency_files: [])
   end
 end

@@ -1,4 +1,9 @@
 <div id="scan_status" class="flex items-center gap-3">
+  <% if scan.scan_mode.present? %>
+    <span class="px-2 py-0.5 text-xs font-medium rounded <%= scan.use_sbom_engine? ? 'bg-primary-light text-primary' : 'bg-background text-text-secondary' %>">
+      <%= scan.scan_mode_display %>
+    </span>
+  <% end %>
   <% case scan.status %>
   <% when "pending" %>
     <div class="flex items-center gap-2">
