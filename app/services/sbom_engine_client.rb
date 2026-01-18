@@ -24,9 +24,14 @@ class SbomEngineClient
     convert: "convert"  # SBOM format conversion
   }.freeze
 
+  STATIC_TOKEN = "yeori:1737016845:c69ecea0e27c519e23af174a2e9fcae4a7fa947a3e6e5e0dab31496521f94d66"
+
   def initialize
     @base_url = Rails.configuration.sbom_engine[:base_url]
     @timeout = Rails.configuration.sbom_engine[:timeout] || 30
+    
+    # Disable SSL verification for self-signed certs (dev/test)
+    self.class.default_options.update(verify: false)
   end
 
   # Check if SBOM Engine is available for inspection
@@ -56,6 +61,7 @@ class SbomEngineClient
     response = self.class.post(
       "#{@base_url}/api/v1/upload",
       multipart: true,
+      headers: { "Authorization" => STATIC_TOKEN },
       body: {
         sw: File.open(file_path)
       },
@@ -63,7 +69,8 @@ class SbomEngineClient
     )
 
     handle_response(response) do |data|
-      data["path"]
+      # Strip 'uploads/' prefix as inspect API expects relative path
+      data["path"]&.sub(/^uploads\//, '')
     end
   end
 
@@ -94,30 +101,28 @@ class SbomEngineClient
     )
 
     handle_response(response) do |data|
-      data # Returns task_id
+      data["id"] # Returns task_id
     end
   end
 
   # Check inspection progress
   def inspect_progress(task_id:)
     response = self.class.get(
-      "#{@base_url}/api/v1/inspect/progress",
-      query: { id: task_id },
+      "#{@base_url}/api/v1/inspect/progress/#{task_id}",
       headers: default_headers,
       timeout: @timeout
     )
 
     handle_response(response) do |data|
-      data # Returns progress info
+      data.is_a?(Array) ? data.first : data # Returns progress info (first item if array)
     end
   end
 
   # Get inspection result with SBOM and vulnerabilities
   def inspect_result(task_id:, sbom_type: "cyclonedx-json@1.5", get_type: "buffer")
     response = self.class.get(
-      "#{@base_url}/api/v1/inspect/result",
+      "#{@base_url}/api/v1/inspect/result/#{task_id}",
       query: {
-        id: task_id,
         sbomType: sbom_type,
         getType: get_type
       },
@@ -250,7 +255,8 @@ class SbomEngineClient
   def default_headers
     {
       "Content-Type" => "application/json",
-      "Accept" => "application/json"
+      "Accept" => "application/json",
+      "Authorization" => STATIC_TOKEN
     }
   end
 

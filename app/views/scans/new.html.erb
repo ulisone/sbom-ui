@@ -139,7 +139,6 @@
             <!-- Hidden file input -->
             <%= f.file_field :dependency_files,
                              multiple: true,
-                             accept: ".json,.txt,.lock,.xml,.mod,.sum,.toml",
                              class: "hidden",
                              data: { file_upload_target: "input", action: "change->file-upload#handleFileSelect" } %>
 

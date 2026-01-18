@@ -8,6 +8,20 @@ class ScanService
   def perform
     update_status(:processing)
 
+    if scan.use_sbom_engine?
+      perform_with_sbom_engine
+    else
+      perform_local_local
+    end
+
+    scan
+  rescue StandardError => e
+    update_status(:failed)
+    Rails.logger.error("Scan failed: #{e.message}\n#{e.backtrace.join("\n")}")
+    raise
+  end
+
+  def perform_local_local
     # Step 1: Parse dependencies from all attached files
     dependencies = parse_all_dependencies
 
@@ -28,12 +42,29 @@ class ScanService
 
     # Step 7: Mark scan as completed
     update_status(:completed, scanned_at: Time.current)
+  end
 
-    scan
-  rescue StandardError => e
-    update_status(:failed)
-    Rails.logger.error("Scan failed: #{e.message}\n#{e.backtrace.join("\n")}")
-    raise
+  def perform_with_sbom_engine
+    scanner = Scanners::SbomEngineScanner.new(scan)
+    result = scanner.perform
+
+    sbom_data = result["sbom"]
+    vuln_data = result["vuln"]
+
+    # Save SBOM
+    scan.update!(sbom_content: sbom_data)
+
+    # Process and save dependencies from (CycloneDX) SBOM
+    if sbom_data && sbom_data["components"]
+      save_dependencies_from_sbom(sbom_data["components"])
+    end
+
+    # Process and save vulnerabilities
+    if vuln_data
+      save_engine_vulnerabilities(vuln_data)
+    end
+
+    update_status(:completed, scanned_at: Time.current)
   end
 
   def update_status(status, **additional_attrs)
@@ -131,5 +162,70 @@ class ScanService
         references: vuln[:references]
       )
     end
+  end
+
+  def save_dependencies_from_sbom(components)
+    components.each do |comp|
+      # Try to map CycloneDX component fields to our dependency model
+      scan.dependencies.create!(
+        name: comp["name"],
+        version: comp["version"],
+        ecosystem: extract_ecosystem_from_purl(comp["purl"]),
+        purl: comp["purl"],
+        license: comp["licenses"]&.first&.dig("license", "id")
+      )
+    end
+  end
+
+  def save_engine_vulnerabilities(vulns)
+    vulns.each do |v|
+      # Map Engine vulnerability format to our DB
+      # Engine structure:
+      # { "id": "CVE-...", "ratings": [{"severity": "High", "score": 7.5}], "description": "...", "affects": [...] }
+      
+      rating = v["ratings"]&.first || {}
+      
+      # Find affected package info from 'affects' array if possible
+      # Or just fill what we can. The engine response might link back to component ref.
+      # For now, we take the first affected component's version or generic info.
+      
+      affected = v["affects"]&.first || {}
+      affected_version = affected["versions"]&.first&.dig("version")
+      ref_id = affected["ref"]
+
+      # Find package name from SBOM link if ref_id exists (requires looking up sbom components)
+      # Simpler approach: If engine provides flat package info, use it. 
+      # Looking at manual: 
+      # "affects": [ { "ref": "component-id", "versions": [...] } ]
+      # We might need to look up the component name from the SBOM using ref.
+      # For MVP, let's try to pass package name if available or fallback.
+      
+      scan.vulnerabilities.create!(
+        cve_id: v["id"],
+        severity: rating["severity"]&.upcase || "UNKNOWN",
+        package_name: find_component_name(ref_id), # We need to access sbom content or pass it
+        package_version: affected_version,
+        title: v["id"], # Engine might not return title separately, use ID
+        description: v["description"],
+        fixed_version: nil, # Engine might not provide fixed version in this structure easily
+        cvss_score: rating["score"],
+        references: [] # Engine source link could be added
+      )
+    end
+  end
+
+  def extract_ecosystem_from_purl(purl)
+    return "unknown" unless purl
+    # pkg:npm/foo@1.0 -> npm
+    purl.split("/").first.gsub("pkg:", "")
+  rescue
+    "unknown"
+  end
+
+  def find_component_name(ref_id)
+    return nil unless ref_id
+    # Optimize: This involves searching the SBOm content which is already saved/in-memory
+    # For now, return ref_id or placeholder if lookup is too expensive/complex here
+    ref_id
   end
 end

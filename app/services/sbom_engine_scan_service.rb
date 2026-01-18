@@ -15,29 +15,41 @@ class SbomEngineScanService
     update_status(:processing)
 
     # Step 1: Check if SBOM Engine is available
+    Rails.logger.info("[SbomEngineScan] Step 1: Checking SBOM Engine availability...")
     unless client.available?
       raise SbomEngineClient::ConnectionError, "SBOM Engine is not available"
     end
+    Rails.logger.info("[SbomEngineScan] Step 1: SBOM Engine is available")
 
     # Step 2: Upload files and get path
+    Rails.logger.info("[SbomEngineScan] Step 2: Uploading files...")
     upload_path = upload_files
+    Rails.logger.info("[SbomEngineScan] Step 2: Files uploaded to path: #{upload_path}")
 
     # Step 3: Request inspection
+    Rails.logger.info("[SbomEngineScan] Step 3: Requesting inspection...")
     task_id = request_inspection(upload_path)
+    Rails.logger.info("[SbomEngineScan] Step 3: Inspection requested, task_id: #{task_id}")
 
     # Step 4: Wait for inspection to complete
+    Rails.logger.info("[SbomEngineScan] Step 4: Waiting for inspection to complete...")
     wait_for_completion(task_id)
+    Rails.logger.info("[SbomEngineScan] Step 4: Inspection completed")
 
     # Step 5: Get and process results
+    Rails.logger.info("[SbomEngineScan] Step 5: Processing results...")
     process_results(task_id)
+    Rails.logger.info("[SbomEngineScan] Step 5: Results processed")
 
     # Step 6: Mark scan as completed
+    Rails.logger.info("[SbomEngineScan] Step 6: Marking scan as completed")
     update_status(:completed, scanned_at: Time.current)
 
     scan
   rescue SbomEngineClient::ApiError, SbomEngineClient::ConnectionError => e
     update_status(:failed)
-    Rails.logger.error("SBOM Engine scan failed: #{e.message}")
+    Rails.logger.error("[SbomEngineScan] FAILED: #{e.class} - #{e.message}")
+    Rails.logger.error("[SbomEngineScan] Backtrace: #{e.backtrace.first(5).join("\n")}")
     raise
   rescue StandardError => e
     update_status(:failed)
@@ -181,12 +193,21 @@ class SbomEngineScanService
         raise SbomEngineClient::ApiError, "Inspection timed out after #{MAX_POLL_ATTEMPTS * POLL_INTERVAL} seconds"
       end
 
+      Rails.logger.info("[SbomEngineScan] Polling progress (attempt #{attempts})...")
       progress = client.inspect_progress(task_id: task_id)
+      Rails.logger.info("[SbomEngineScan] Progress response: #{progress.inspect}")
 
-      Rails.logger.info("Scan progress for task #{task_id}: #{progress.inspect}")
+      status = progress["status"] if progress.is_a?(Hash)
+      Rails.logger.info("[SbomEngineScan] Status: #{status.inspect}")
 
-      # Check if inspection is complete
-      if progress_complete?(progress)
+      # 에러 상태 확인 - [error]로 시작하면 오류
+      if status&.start_with?("[error]")
+        raise SbomEngineClient::InspectError, "Inspection failed: #{status}"
+      end
+
+      # 완료 확인 - "task complete."이면 완료
+      if status == "task complete."
+        Rails.logger.info("[SbomEngineScan] Task #{task_id} completed successfully")
         break
       end
 
@@ -195,11 +216,8 @@ class SbomEngineScanService
   end
 
   def progress_complete?(progress)
-    # Assuming progress returns a status or percentage
-    return true if progress.is_a?(Hash) && progress["status"] == "completed"
-    return true if progress.is_a?(Hash) && progress["progress"] == 100
-    return true if progress == "completed"
-    false
+    return false unless progress.is_a?(Hash)
+    progress["status"] == "task complete."
   end
 
   def process_results(task_id)

@@ -8778,35 +8778,9 @@ var file_upload_controller_default = class extends Controller {
     this.addFiles(selectedFiles);
   }
   addFiles(newFiles) {
-    const supportedFiles = newFiles.filter((file) => this.isSupportedFile(file));
-    if (supportedFiles.length !== newFiles.length) {
-      const unsupported = newFiles.length - supportedFiles.length;
-      this.showNotification(`${unsupported} file(s) not supported`, "warning");
-    }
-    this.files = [...this.files, ...supportedFiles];
+    this.files = [...this.files, ...newFiles];
     this.updatePreview();
     this.updateFileInput();
-  }
-  isSupportedFile(file) {
-    const supportedNames = [
-      "package.json",
-      "package-lock.json",
-      "yarn.lock",
-      "requirements.txt",
-      "Pipfile",
-      "Pipfile.lock",
-      "Gemfile",
-      "Gemfile.lock",
-      "pom.xml",
-      "build.gradle",
-      "go.mod",
-      "go.sum",
-      "Cargo.toml",
-      "Cargo.lock",
-      "composer.json",
-      "composer.lock"
-    ];
-    return supportedNames.includes(file.name);
   }
   removeFile(event) {
     const index = parseInt(event.currentTarget.dataset.index);
