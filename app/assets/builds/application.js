@@ -8889,6 +8889,26 @@ var tabs_controller_default = class extends Controller {
   }
 };
 
+// app/javascript/controllers/password_visibility_controller.js
+var password_visibility_controller_default = class extends Controller {
+  static targets = ["input", "iconOn", "iconOff"];
+  connect() {
+    this.hidden = true;
+  }
+  toggle(e) {
+    e.preventDefault();
+    this.hidden = !this.hidden;
+    this.inputTarget.type = this.hidden ? "password" : "text";
+    if (this.hidden) {
+      this.iconOnTarget.classList.remove("hidden");
+      this.iconOffTarget.classList.add("hidden");
+    } else {
+      this.iconOnTarget.classList.add("hidden");
+      this.iconOffTarget.classList.remove("hidden");
+    }
+  }
+};
+
 // app/javascript/controllers/index.js
 application.register("hello", hello_controller_default);
 application.register("dropdown", dropdown_controller_default);
@@ -8897,6 +8917,7 @@ application.register("upload", upload_controller_default);
 application.register("scan-status", scan_status_controller_default);
 application.register("file-upload", file_upload_controller_default);
 application.register("tabs", tabs_controller_default);
+application.register("password-visibility", password_visibility_controller_default);
 /*! Bundled license information:
 
 @hotwired/turbo/dist/turbo.es2017-esm.js:
