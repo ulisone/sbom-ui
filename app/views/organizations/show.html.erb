@@ -1,0 +1,229 @@
+<% content_for(:page_title) { @organization.name } %>
+
+<div class="flex items-center justify-between mb-6">
+  <div>
+    <div class="flex items-center gap-2 mb-2">
+      <%= link_to organizations_path, class: "text-text-secondary hover:text-text-primary" do %>
+        <%= t("organizations.title") %>
+      <% end %>
+      <span class="text-text-muted">/</span>
+      <span class="text-text-primary"><%= @organization.name %></span>
+    </div>
+    <% if @organization.description.present? %>
+      <p class="text-text-secondary"><%= @organization.description %></p>
+    <% end %>
+    <p class="text-text-muted text-sm mt-1">@<%= @organization.slug %></p>
+  </div>
+  <% if @organization.can_manage?(current_user) %>
+    <div class="flex items-center gap-2">
+      <%= link_to edit_organization_path(@organization), class: "btn-secondary" do %>
+        <%= t("common.edit") %>
+      <% end %>
+    </div>
+  <% end %>
+</div>
+
+<!-- Stats -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+  <div class="card flex items-center gap-4">
+    <div class="w-10 h-10 bg-primary-bg rounded-lg flex items-center justify-center">
+      <svg class="w-5 h-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+      </svg>
+    </div>
+    <div>
+      <p class="text-2xl font-bold text-text-primary"><%= @memberships.count %></p>
+      <p class="text-text-secondary text-sm"><%= t("organizations.labels.members") %></p>
+    </div>
+  </div>
+  <div class="card flex items-center gap-4">
+    <div class="w-10 h-10 bg-medium-bg rounded-lg flex items-center justify-center">
+      <svg class="w-5 h-5 text-medium" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
+      </svg>
+    </div>
+    <div>
+      <p class="text-2xl font-bold text-text-primary"><%= @projects.count %></p>
+      <p class="text-text-secondary text-sm"><%= t("organizations.labels.projects") %></p>
+    </div>
+  </div>
+  <div class="card flex items-center gap-4">
+    <div class="w-10 h-10 bg-high-bg rounded-lg flex items-center justify-center">
+      <svg class="w-5 h-5 text-high" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+      </svg>
+    </div>
+    <div>
+      <% total_vulns = @projects.sum { |p| p.vulnerabilities.count } %>
+      <p class="text-2xl font-bold text-text-primary"><%= total_vulns %></p>
+      <p class="text-text-secondary text-sm"><%= t("organizations.labels.total_vulnerabilities") %></p>
+    </div>
+  </div>
+</div>
+
+<!-- Members Section -->
+<div class="card mb-6">
+  <div class="flex items-center justify-between mb-4">
+    <h3 class="text-lg font-semibold text-text-primary"><%= t("organizations.sections.members") %></h3>
+    <% if @organization.can_manage?(current_user) %>
+      <button type="button" class="btn-secondary text-sm" data-controller="modal" data-action="click->modal#open" data-modal-target-value="add-member-modal">
+        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
+        </svg>
+        <%= t("organizations.members.add") %>
+      </button>
+    <% end %>
+  </div>
+
+  <div class="table-container">
+    <table class="table">
+      <thead>
+        <tr>
+          <th><%= t("organizations.labels.member") %></th>
+          <th><%= t("organizations.labels.role") %></th>
+          <th><%= t("organizations.labels.joined") %></th>
+          <% if @organization.can_manage?(current_user) %>
+            <th><%= t("common.actions") %></th>
+          <% end %>
+        </tr>
+      </thead>
+      <tbody>
+        <% @memberships.each do |membership| %>
+          <tr>
+            <td>
+              <div class="flex items-center gap-3">
+                <div class="w-8 h-8 bg-primary-bg rounded-full flex items-center justify-center">
+                  <span class="text-sm font-medium text-primary"><%= membership.user.display_name[0].upcase %></span>
+                </div>
+                <div>
+                  <p class="font-medium text-text-primary"><%= membership.user.display_name %></p>
+                  <p class="text-sm text-text-muted"><%= membership.user.email %></p>
+                </div>
+              </div>
+            </td>
+            <td>
+              <span class="badge <%= membership.owner? ? 'badge-critical' : (membership.admin? ? 'badge-high' : 'badge-medium') %>">
+                <%= membership.role_display %>
+              </span>
+            </td>
+            <td class="text-text-secondary"><%= membership.created_at.strftime("%Y-%m-%d") %></td>
+            <% if @organization.can_manage?(current_user) %>
+              <td>
+                <% unless membership.user == current_user %>
+                  <div class="flex items-center gap-2">
+                    <%= form_with model: [@organization, membership], method: :patch, class: "inline" do |f| %>
+                      <%= f.select :role, Organization::ROLES.map { |r| [t("organizations.roles.#{r}"), r] },
+                          { selected: membership.role },
+                          class: "input-field text-sm py-1",
+                          onchange: "this.form.submit()" %>
+                    <% end %>
+                    <%= button_to organization_membership_path(@organization, membership),
+                        method: :delete,
+                        class: "text-critical hover:text-critical-hover",
+                        data: { turbo_confirm: t("organizations.members.remove_confirm") } do %>
+                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                      </svg>
+                    <% end %>
+                  </div>
+                <% else %>
+                  <span class="text-text-muted text-sm"><%= t("organizations.members.you") %></span>
+                <% end %>
+              </td>
+            <% end %>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Projects Section -->
+<div class="card">
+  <div class="flex items-center justify-between mb-4">
+    <h3 class="text-lg font-semibold text-text-primary"><%= t("organizations.sections.projects") %></h3>
+  </div>
+
+  <% if @projects.any? %>
+    <div class="table-container">
+      <table class="table">
+        <thead>
+          <tr>
+            <th><%= t("projects.labels.name") %></th>
+            <th><%= t("projects.labels.owner") %></th>
+            <th><%= t("projects.labels.scans") %></th>
+            <th><%= t("projects.labels.vulnerabilities") %></th>
+            <th><%= t("common.actions") %></th>
+          </tr>
+        </thead>
+        <tbody>
+          <% @projects.each do |project| %>
+            <tr>
+              <td>
+                <%= link_to project.name, project_path(project), class: "text-primary hover:underline font-medium" %>
+              </td>
+              <td class="text-text-secondary"><%= project.user.display_name %></td>
+              <td class="text-text-secondary"><%= project.scans.count %></td>
+              <td>
+                <% summary = project.vulnerability_summary %>
+                <div class="flex items-center gap-1">
+                  <% if summary[:critical] > 0 %>
+                    <span class="badge-critical"><%= summary[:critical] %></span>
+                  <% end %>
+                  <% if summary[:high] > 0 %>
+                    <span class="badge-high"><%= summary[:high] %></span>
+                  <% end %>
+                  <% if summary[:critical] == 0 && summary[:high] == 0 %>
+                    <span class="text-text-muted"><%= project.total_vulnerabilities %></span>
+                  <% end %>
+                </div>
+              </td>
+              <td>
+                <%= link_to project_path(project), class: "text-primary hover:text-primary-hover" do %>
+                  <%= t("common.view") %>
+                <% end %>
+              </td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+  <% else %>
+    <div class="text-center py-8">
+      <p class="text-text-secondary"><%= t("organizations.projects.empty") %></p>
+    </div>
+  <% end %>
+</div>
+
+<!-- Add Member Modal -->
+<% if @organization.can_manage?(current_user) %>
+  <div id="add-member-modal" class="fixed inset-0 z-50 hidden" data-controller="modal">
+    <div class="fixed inset-0 bg-black/50" data-action="click->modal#close"></div>
+    <div class="fixed inset-0 flex items-center justify-center p-4">
+      <div class="bg-bg-primary rounded-lg shadow-xl max-w-md w-full p-6 relative">
+        <button type="button" class="absolute top-4 right-4 text-text-muted hover:text-text-primary" data-action="click->modal#close">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+        <h3 class="text-lg font-semibold text-text-primary mb-4"><%= t("organizations.members.add_title") %></h3>
+        <%= form_with url: organization_memberships_path(@organization), method: :post do |f| %>
+          <div class="mb-4">
+            <%= f.label :email, t("organizations.labels.email"), class: "block text-sm font-medium text-text-secondary mb-1" %>
+            <%= f.email_field :email, class: "input-field w-full", placeholder: "user@example.com", required: true %>
+          </div>
+          <div class="mb-6">
+            <%= f.label :role, t("organizations.labels.role"), class: "block text-sm font-medium text-text-secondary mb-1" %>
+            <%= f.select :role, Organization::ROLES.reject { |r| r == "owner" }.map { |r| [t("organizations.roles.#{r}"), r] },
+                { selected: "member" },
+                class: "input-field w-full" %>
+          </div>
+          <div class="flex justify-end gap-2">
+            <button type="button" class="btn-secondary" data-action="click->modal#close"><%= t("common.cancel") %></button>
+            <%= f.submit t("organizations.members.add"), class: "btn-primary cursor-pointer" %>
+          </div>
+        <% end %>
+      </div>
+    </div>
+  </div>
+<% end %>

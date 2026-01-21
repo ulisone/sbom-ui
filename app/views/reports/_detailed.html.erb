@@ -1,0 +1,181 @@
+<%# Detailed Report Partial %>
+<% content = report.content.with_indifferent_access %>
+<% vuln_summary = content[:vulnerability_summary] || {} %>
+<% dep_summary = content[:dependency_summary] || {} %>
+
+<!-- Summary Section -->
+<div class="grid grid-cols-1 md:grid-cols-5 gap-4 mb-6">
+  <div class="card text-center">
+    <p class="text-3xl font-bold <%= risk_score_text_class(content[:risk_score]) %>"><%= content[:risk_score] || 0 %></p>
+    <p class="text-text-secondary text-sm"><%= t('reports.labels.risk_score') %></p>
+  </div>
+  <div class="card text-center">
+    <p class="text-3xl font-bold text-critical"><%= vuln_summary[:critical] || 0 %></p>
+    <p class="text-text-secondary text-sm"><%= t('vulnerabilities.severity.critical') %></p>
+  </div>
+  <div class="card text-center">
+    <p class="text-3xl font-bold text-high"><%= vuln_summary[:high] || 0 %></p>
+    <p class="text-text-secondary text-sm"><%= t('vulnerabilities.severity.high') %></p>
+  </div>
+  <div class="card text-center">
+    <p class="text-3xl font-bold text-medium"><%= vuln_summary[:medium] || 0 %></p>
+    <p class="text-text-secondary text-sm"><%= t('vulnerabilities.severity.medium') %></p>
+  </div>
+  <div class="card text-center">
+    <p class="text-3xl font-bold text-low"><%= vuln_summary[:low] || 0 %></p>
+    <p class="text-text-secondary text-sm"><%= t('vulnerabilities.severity.low') %></p>
+  </div>
+</div>
+
+<!-- Vulnerability by Ecosystem -->
+<% if content[:vulnerability_by_ecosystem].present? %>
+  <div class="card mb-6">
+    <h3 class="text-lg font-semibold text-text-primary mb-4"><%= t('reports.sections.by_ecosystem') %></h3>
+    <div class="overflow-x-auto">
+      <table class="w-full">
+        <thead>
+          <tr class="border-b border-border">
+            <th class="text-left py-2 text-text-secondary font-medium"><%= t('reports.labels.ecosystem') %></th>
+            <th class="text-center py-2 text-text-secondary font-medium"><%= t('scans.dependencies') %></th>
+            <th class="text-center py-2 text-text-secondary font-medium"><%= t('reports.labels.total') %></th>
+            <th class="text-center py-2 text-critical font-medium">C</th>
+            <th class="text-center py-2 text-high font-medium">H</th>
+            <th class="text-center py-2 text-medium font-medium">M</th>
+            <th class="text-center py-2 text-low font-medium">L</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% content[:vulnerability_by_ecosystem].each do |ecosystem, data| %>
+            <tr class="border-b border-border">
+              <td class="py-3 text-text-primary font-medium"><%= ecosystem %></td>
+              <td class="py-3 text-center text-text-secondary"><%= data[:total_dependencies] %></td>
+              <td class="py-3 text-center text-text-primary"><%= data[:total_vulnerabilities] %></td>
+              <td class="py-3 text-center"><span class="<%= data[:critical].to_i > 0 ? 'text-critical font-bold' : 'text-text-muted' %>"><%= data[:critical] %></span></td>
+              <td class="py-3 text-center"><span class="<%= data[:high].to_i > 0 ? 'text-high font-bold' : 'text-text-muted' %>"><%= data[:high] %></span></td>
+              <td class="py-3 text-center"><span class="<%= data[:medium].to_i > 0 ? 'text-medium font-bold' : 'text-text-muted' %>"><%= data[:medium] %></span></td>
+              <td class="py-3 text-center"><span class="<%= data[:low].to_i > 0 ? 'text-low font-bold' : 'text-text-muted' %>"><%= data[:low] %></span></td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+<% end %>
+
+<!-- Vulnerability by Package -->
+<% if content[:vulnerability_by_package].present? %>
+  <div class="card mb-6">
+    <h3 class="text-lg font-semibold text-text-primary mb-4"><%= t('reports.sections.by_package') %></h3>
+    <div class="max-h-96 overflow-y-auto">
+      <div class="space-y-2">
+        <% content[:vulnerability_by_package].sort_by { |_, v| -(v[:critical].to_i * 100 + v[:high].to_i * 10 + v[:count].to_i) }.first(20).each do |package, data| %>
+          <div class="flex items-center justify-between p-3 bg-background rounded-lg">
+            <span class="text-text-primary font-mono text-sm"><%= package %></span>
+            <div class="flex items-center gap-2">
+              <% if data[:critical].to_i > 0 %>
+                <span class="badge-critical"><%= data[:critical] %> C</span>
+              <% end %>
+              <% if data[:high].to_i > 0 %>
+                <span class="badge-high"><%= data[:high] %> H</span>
+              <% end %>
+              <% if data[:medium].to_i > 0 %>
+                <span class="badge-medium"><%= data[:medium] %> M</span>
+              <% end %>
+              <% if data[:low].to_i > 0 %>
+                <span class="badge-low"><%= data[:low] %> L</span>
+              <% end %>
+            </div>
+          </div>
+        <% end %>
+      </div>
+    </div>
+  </div>
+<% end %>
+
+<!-- All Vulnerabilities -->
+<% if content[:all_vulnerabilities].present? %>
+  <div class="card mb-6">
+    <h3 class="text-lg font-semibold text-text-primary mb-4"><%= t('reports.sections.all_vulnerabilities') %> (<%= content[:all_vulnerabilities].size %>)</h3>
+    <div class="table-container">
+      <table class="table">
+        <thead>
+          <tr>
+            <th><%= t('vulnerabilities.labels.cve_id') %></th>
+            <th><%= t('reports.labels.severity') %></th>
+            <th><%= t('vulnerabilities.labels.package') %></th>
+            <th><%= t('reports.labels.title') %></th>
+            <th>CVSS</th>
+            <th><%= t('vulnerabilities.labels.fixed_version') %></th>
+          </tr>
+        </thead>
+        <tbody>
+          <% content[:all_vulnerabilities].each do |vuln| %>
+            <tr>
+              <td class="font-mono text-sm"><%= vuln[:cve_id] %></td>
+              <td><span class="<%= severity_badge_class(vuln[:severity]) %>"><%= vuln[:severity] %></span></td>
+              <td><%= vuln[:package_name] %>@<%= vuln[:package_version] %></td>
+              <td class="max-w-xs truncate"><%= vuln[:title] %></td>
+              <td><%= vuln[:cvss_score] || '-' %></td>
+              <td class="<%= vuln[:has_fix] ? 'text-low' : 'text-text-muted' %>"><%= vuln[:fixed_version] || '-' %></td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+<% end %>
+
+<!-- Remediation Plan -->
+<% if content[:remediation_plan].present? %>
+  <div class="card mb-6">
+    <h3 class="text-lg font-semibold text-text-primary mb-4"><%= t('reports.sections.remediation_plan') %></h3>
+    <div class="space-y-6">
+      <% content[:remediation_plan].each do |phase| %>
+        <div>
+          <div class="flex items-center gap-3 mb-3">
+            <span class="w-8 h-8 rounded-full flex items-center justify-center bg-primary text-white font-bold"><%= phase[:phase] %></span>
+            <h4 class="font-medium text-text-primary"><%= phase[:title] %></h4>
+            <span class="<%= severity_badge_class(phase[:priority]&.upcase) %>"><%= phase[:priority] %></span>
+          </div>
+          <div class="ml-11 space-y-2">
+            <% phase[:actions]&.each do |action| %>
+              <div class="flex items-center justify-between p-2 bg-background rounded">
+                <span class="text-text-secondary text-sm"><%= action[:package] %></span>
+                <span class="text-text-muted text-xs font-mono"><%= action[:cve_id] %></span>
+              </div>
+            <% end %>
+          </div>
+        </div>
+      <% end %>
+    </div>
+  </div>
+<% end %>
+
+<!-- All Dependencies -->
+<% if content[:all_dependencies].present? %>
+  <div class="card">
+    <h3 class="text-lg font-semibold text-text-primary mb-4"><%= t('reports.sections.all_dependencies') %> (<%= content[:all_dependencies].size %>)</h3>
+    <div class="max-h-96 overflow-y-auto">
+      <table class="w-full">
+        <thead class="sticky top-0 bg-surface">
+          <tr class="border-b border-border">
+            <th class="text-left py-2 text-text-secondary font-medium"><%= t('reports.labels.name') %></th>
+            <th class="text-left py-2 text-text-secondary font-medium"><%= t('reports.labels.version') %></th>
+            <th class="text-left py-2 text-text-secondary font-medium"><%= t('reports.labels.ecosystem') %></th>
+            <th class="text-left py-2 text-text-secondary font-medium"><%= t('reports.labels.license') %></th>
+          </tr>
+        </thead>
+        <tbody>
+          <% content[:all_dependencies].each do |dep| %>
+            <tr class="border-b border-border">
+              <td class="py-2 text-text-primary"><%= dep[:name] %></td>
+              <td class="py-2 text-text-secondary font-mono text-sm"><%= dep[:version] %></td>
+              <td class="py-2 text-text-muted"><%= dep[:ecosystem] %></td>
+              <td class="py-2 text-text-muted text-sm"><%= dep[:license] || '-' %></td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+<% end %>

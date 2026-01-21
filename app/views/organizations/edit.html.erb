@@ -1,0 +1,31 @@
+<% content_for(:page_title) { t("organizations.edit") } %>
+
+<div class="max-w-2xl mx-auto">
+  <div class="flex items-center gap-2 mb-6">
+    <%= link_to organizations_path, class: "text-text-secondary hover:text-text-primary" do %>
+      <%= t("organizations.title") %>
+    <% end %>
+    <span class="text-text-muted">/</span>
+    <%= link_to @organization.name, organization_path(@organization), class: "text-text-secondary hover:text-text-primary" %>
+    <span class="text-text-muted">/</span>
+    <span class="text-text-primary"><%= t("common.edit") %></span>
+  </div>
+
+  <div class="card">
+    <h2 class="text-xl font-semibold text-text-primary mb-6"><%= t("organizations.form.edit_title") %></h2>
+
+    <%= render "form", organization: @organization %>
+  </div>
+
+  <!-- Danger Zone -->
+  <div class="card mt-6 border-critical">
+    <h3 class="text-lg font-semibold text-critical mb-4"><%= t("organizations.danger_zone.title") %></h3>
+    <p class="text-text-secondary mb-4"><%= t("organizations.danger_zone.delete_warning") %></p>
+    <%= button_to organization_path(@organization),
+        method: :delete,
+        class: "btn-danger",
+        data: { turbo_confirm: t("organizations.danger_zone.delete_confirm") } do %>
+      <%= t("organizations.danger_zone.delete") %>
+    <% end %>
+  </div>
+</div>

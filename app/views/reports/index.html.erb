@@ -1,0 +1,86 @@
+<% content_for(:page_title) { t('reports.title') } %>
+
+<div class="flex items-center justify-between mb-6">
+  <div>
+    <h1 class="text-2xl font-bold text-text-primary"><%= t('reports.all_reports') %></h1>
+    <p class="text-text-secondary mt-1"><%= t('reports.all_reports_description') %></p>
+  </div>
+</div>
+
+<% if @reports.any? %>
+  <div class="table-container">
+    <table class="table">
+      <thead>
+        <tr>
+          <th><%= t('reports.labels.project') %></th>
+          <th><%= t('reports.labels.type') %></th>
+          <th><%= t('reports.labels.format') %></th>
+          <th><%= t('reports.labels.status') %></th>
+          <th><%= t('reports.labels.generated_at') %></th>
+          <th><%= t('common.actions') %></th>
+        </tr>
+      </thead>
+      <tbody>
+        <% @reports.each do |report| %>
+          <tr>
+            <td>
+              <%= link_to report.project.name, report.project, class: "text-primary hover:underline" %>
+            </td>
+            <td>
+              <span class="badge bg-primary-light text-primary"><%= report.report_type_display %></span>
+            </td>
+            <td>
+              <span class="text-text-secondary"><%= report.format_display %></span>
+            </td>
+            <td>
+              <% case report.status %>
+              <% when "completed" %>
+                <span class="badge-low"><%= t('reports.status.completed') %></span>
+              <% when "generating" %>
+                <span class="badge-medium"><%= t('reports.status.generating') %></span>
+              <% when "pending" %>
+                <span class="badge bg-surface-hover text-text-secondary"><%= t('reports.status.pending') %></span>
+              <% when "failed" %>
+                <span class="badge-critical"><%= t('reports.status.failed') %></span>
+              <% end %>
+            </td>
+            <td class="text-text-secondary">
+              <% if report.generated_at %>
+                <%= l(report.generated_at, format: :short) %>
+              <% else %>
+                -
+              <% end %>
+            </td>
+            <td>
+              <div class="flex items-center gap-2">
+                <%= link_to report, class: "text-primary hover:underline text-sm" do %>
+                  <%= t('common.view') %>
+                <% end %>
+                <% if report.completed? %>
+                  <%= link_to download_report_path(report), class: "text-text-secondary hover:text-text-primary text-sm" do %>
+                    <%= t('reports.download') %>
+                  <% end %>
+                <% end %>
+              </div>
+            </td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="mt-4">
+    <%== pagy_nav(@pagy) if defined?(@pagy) && @pagy.pages > 1 %>
+  </div>
+<% else %>
+  <div class="card text-center py-12">
+    <svg class="w-12 h-12 text-text-muted mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+    </svg>
+    <h3 class="text-lg font-medium text-text-primary mb-2"><%= t('reports.messages.no_reports') %></h3>
+    <p class="text-text-secondary mb-4"><%= t('reports.messages.no_reports_description') %></p>
+    <%= link_to projects_path, class: "btn-primary" do %>
+      <%= t('projects.go_to_projects') %>
+    <% end %>
+  </div>
+<% end %>

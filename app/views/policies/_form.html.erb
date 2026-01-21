@@ -1,0 +1,77 @@
+<%= form_with model: [@project, policy], data: { controller: "policy-form" } do |f| %>
+  <% if policy.errors.any? %>
+    <div class="bg-critical-bg border border-critical rounded-lg p-4 mb-6">
+      <h3 class="text-critical font-medium mb-2"><%= t("policies.form.errors", count: policy.errors.count) %></h3>
+      <ul class="list-disc list-inside text-sm text-critical">
+        <% policy.errors.full_messages.each do |message| %>
+          <li><%= message %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <div class="space-y-6">
+    <div>
+      <%= f.label :name, t("policies.labels.name"), class: "block text-sm font-medium text-text-secondary mb-1" %>
+      <%= f.text_field :name, class: "input-field w-full", required: true, placeholder: t("policies.placeholders.name") %>
+    </div>
+
+    <div>
+      <%= f.label :description, t("policies.labels.description"), class: "block text-sm font-medium text-text-secondary mb-1" %>
+      <%= f.text_area :description, class: "input-field w-full", rows: 2, placeholder: t("policies.placeholders.description") %>
+    </div>
+
+    <div>
+      <%= f.label :policy_type, t("policies.labels.type"), class: "block text-sm font-medium text-text-secondary mb-1" %>
+      <%= f.select :policy_type,
+          Policy::TYPES.map { |t| [I18n.t("policies.types.#{t}"), t] },
+          { include_blank: t("policies.placeholders.select_type") },
+          class: "input-field w-full",
+          data: { action: "change->policy-form#typeChanged", "policy-form-target": "typeSelect" } %>
+    </div>
+
+    <!-- Vulnerability Threshold Rules -->
+    <div data-policy-form-target="vulnerabilityRules" class="<%= 'hidden' unless policy.policy_type == Policy::VULNERABILITY_THRESHOLD %> space-y-4 p-4 bg-surface rounded-lg">
+      <h4 class="font-medium text-text-primary"><%= t("policies.rules.vulnerability_thresholds") %></h4>
+      <div class="grid grid-cols-2 gap-4">
+        <div>
+          <%= f.label "rules[max_critical]", t("policies.rules.max_critical"), class: "block text-sm text-text-secondary mb-1" %>
+          <%= f.number_field "rules[max_critical]", value: policy.rules&.dig("max_critical"), min: 0, class: "input-field w-full", placeholder: "0" %>
+        </div>
+        <div>
+          <%= f.label "rules[max_high]", t("policies.rules.max_high"), class: "block text-sm text-text-secondary mb-1" %>
+          <%= f.number_field "rules[max_high]", value: policy.rules&.dig("max_high"), min: 0, class: "input-field w-full", placeholder: "5" %>
+        </div>
+      </div>
+    </div>
+
+    <!-- License Rules -->
+    <div data-policy-form-target="licenseRules" class="<%= 'hidden' unless policy.policy_type.in?([Policy::LICENSE_ALLOWLIST, Policy::LICENSE_BLOCKLIST]) %> space-y-4 p-4 bg-surface rounded-lg">
+      <h4 class="font-medium text-text-primary"><%= t("policies.rules.license_list") %></h4>
+      <div>
+        <%= f.label "rules[licenses]", t("policies.rules.licenses"), class: "block text-sm text-text-secondary mb-1" %>
+        <%= f.text_area "rules[licenses]", value: policy.rules&.dig("licenses")&.join("\n"), class: "input-field w-full", rows: 4, placeholder: "MIT\nApache-2.0\nBSD-3-Clause" %>
+        <p class="text-xs text-text-muted mt-1"><%= t("policies.rules.licenses_hint") %></p>
+      </div>
+    </div>
+
+    <!-- Risk Score Rules -->
+    <div data-policy-form-target="riskScoreRules" class="<%= 'hidden' unless policy.policy_type == Policy::RISK_SCORE_LIMIT %> space-y-4 p-4 bg-surface rounded-lg">
+      <h4 class="font-medium text-text-primary"><%= t("policies.rules.risk_score") %></h4>
+      <div>
+        <%= f.label "rules[max_score]", t("policies.rules.max_score"), class: "block text-sm text-text-secondary mb-1" %>
+        <%= f.number_field "rules[max_score]", value: policy.rules&.dig("max_score") || 70, min: 0, max: 100, step: 1, class: "input-field w-full" %>
+      </div>
+    </div>
+
+    <div class="flex items-center gap-3 pt-4">
+      <%= f.check_box :enabled, class: "w-5 h-5 rounded border-border text-primary focus:ring-primary" %>
+      <%= f.label :enabled, t("policies.labels.enabled"), class: "text-text-primary" %>
+    </div>
+  </div>
+
+  <div class="flex justify-end gap-2 pt-6 mt-6 border-t border-border">
+    <%= link_to t("common.cancel"), project_policies_path(@project), class: "btn-secondary" %>
+    <%= f.submit policy.persisted? ? t("common.save") : t("policies.form.create"), class: "btn-primary cursor-pointer" %>
+  </div>
+<% end %>

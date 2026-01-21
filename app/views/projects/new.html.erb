@@ -40,6 +40,17 @@
         <p class="text-xs text-text-muted mt-1">Connect a Git repository to scan dependencies directly from source</p>
       </div>
 
+      <% if current_user.organizations.any? %>
+        <div>
+          <%= f.label :organization_id, t("organizations.title"), class: "label" %>
+          <%= f.select :organization_id,
+              [[t("projects.personal_project"), nil]] + current_user.organizations.map { |o| [o.name, o.id] },
+              {},
+              class: "input" %>
+          <p class="text-xs text-text-muted mt-1"><%= t("projects.organization_hint") %></p>
+        </div>
+      <% end %>
+
       <div class="flex items-center gap-4 pt-4">
         <%= f.submit "Create Project", class: "btn-primary" %>
         <%= link_to "Cancel", projects_path, class: "btn-secondary" %>

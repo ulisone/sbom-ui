@@ -1,0 +1,131 @@
+<%# Compliance Report Partial %>
+<% content = report.content.with_indifferent_access %>
+<% vuln_summary = content[:vulnerability_summary] || {} %>
+
+<!-- Risk Score Overview -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+  <div class="card text-center">
+    <p class="text-4xl font-bold <%= risk_score_text_class(content[:risk_score]) %>"><%= content[:risk_score] || 0 %></p>
+    <p class="text-text-secondary"><%= t('reports.labels.risk_score') %></p>
+  </div>
+  <div class="card text-center">
+    <p class="text-4xl font-bold text-text-primary"><%= vuln_summary[:total] || 0 %></p>
+    <p class="text-text-secondary"><%= t('reports.labels.total_vulnerabilities') %></p>
+  </div>
+  <div class="card text-center">
+    <p class="text-4xl font-bold text-critical"><%= vuln_summary[:critical] || 0 %></p>
+    <p class="text-text-secondary"><%= t('reports.labels.critical_issues') %></p>
+  </div>
+</div>
+
+<!-- Compliance Checks -->
+<% if content[:compliance_checks].present? %>
+  <div class="card mb-6">
+    <h3 class="text-lg font-semibold text-text-primary mb-4"><%= t('reports.sections.compliance_checks') %></h3>
+    <div class="space-y-3">
+      <% content[:compliance_checks].each do |check| %>
+        <div class="flex items-center gap-4 p-4 rounded-lg border <%= compliance_check_class(check[:status]) %>">
+          <%= compliance_check_icon(check[:status]) %>
+          <div class="flex-1">
+            <p class="font-medium text-text-primary"><%= t("reports.checks.#{check[:name]}", default: check[:name].to_s.titleize) %></p>
+            <p class="text-text-secondary text-sm"><%= check[:message] %></p>
+          </div>
+          <span class="badge <%= check[:status] == 'pass' ? 'bg-low-bg text-low' : (check[:status] == 'warn' ? 'bg-medium-bg text-medium' : 'bg-critical-bg text-critical') %>">
+            <%= check[:status].to_s.upcase %>
+          </span>
+        </div>
+      <% end %>
+    </div>
+  </div>
+<% end %>
+
+<!-- Policy Violations -->
+<% if content[:policy_violations].present? %>
+  <div class="card mb-6">
+    <h3 class="text-lg font-semibold text-text-primary mb-4">
+      <%= t('reports.sections.policy_violations') %>
+      <span class="ml-2 badge bg-critical-bg text-critical"><%= content[:policy_violations].size %></span>
+    </h3>
+    <div class="table-container">
+      <table class="table">
+        <thead>
+          <tr>
+            <th><%= t('reports.labels.policy') %></th>
+            <th><%= t('reports.labels.severity') %></th>
+            <th><%= t('vulnerabilities.labels.package') %></th>
+            <th><%= t('vulnerabilities.labels.cve_id') %></th>
+          </tr>
+        </thead>
+        <tbody>
+          <% content[:policy_violations].each do |violation| %>
+            <tr>
+              <td class="text-text-primary"><%= t("reports.policies.#{violation[:policy]}", default: violation[:policy].to_s.titleize) %></td>
+              <td><span class="<%= severity_badge_class(violation[:severity]) %>"><%= violation[:severity].to_s.upcase %></span></td>
+              <td class="font-mono text-sm"><%= violation[:package] %></td>
+              <td class="font-mono text-sm"><%= violation[:cve_id] %></td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+<% end %>
+
+<!-- License Analysis -->
+<% if content[:license_analysis].present? %>
+  <div class="card mb-6">
+    <h3 class="text-lg font-semibold text-text-primary mb-4"><%= t('reports.sections.license_analysis') %></h3>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+      <div class="p-4 bg-background rounded-lg text-center">
+        <p class="text-2xl font-bold text-text-primary"><%= content[:license_analysis][:total_licenses] || 0 %></p>
+        <p class="text-text-secondary text-sm"><%= t('reports.labels.total_licenses') %></p>
+      </div>
+      <div class="p-4 bg-background rounded-lg text-center">
+        <p class="text-2xl font-bold text-medium"><%= content[:license_analysis][:unknown] || 0 %></p>
+        <p class="text-text-secondary text-sm"><%= t('reports.labels.unknown_licenses') %></p>
+      </div>
+      <div class="p-4 bg-background rounded-lg text-center">
+        <p class="text-2xl font-bold text-low"><%= (content[:license_analysis][:total_licenses] || 0) - (content[:license_analysis][:unknown] || 0) %></p>
+        <p class="text-text-secondary text-sm"><%= t('reports.labels.known_licenses') %></p>
+      </div>
+    </div>
+
+    <% if content[:license_analysis][:breakdown].present? %>
+      <h4 class="font-medium text-text-primary mb-3"><%= t('reports.labels.license_breakdown') %></h4>
+      <div class="flex flex-wrap gap-2">
+        <% content[:license_analysis][:breakdown].reject { |k, _| k.nil? }.sort_by { |_, v| -v }.each do |license, count| %>
+          <span class="badge bg-surface-hover text-text-primary">
+            <%= license %>: <%= count %>
+          </span>
+        <% end %>
+      </div>
+    <% end %>
+  </div>
+<% end %>
+
+<!-- Recommendations -->
+<% if content[:recommendations].present? %>
+  <div class="card">
+    <h3 class="text-lg font-semibold text-text-primary mb-4"><%= t('reports.sections.recommendations') %></h3>
+    <div class="space-y-4">
+      <% content[:recommendations].each_with_index do |rec, index| %>
+        <div class="flex gap-4">
+          <div class="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center <%= recommendation_priority_class(rec[:priority]) %>">
+            <%= index + 1 %>
+          </div>
+          <div>
+            <h4 class="font-medium text-text-primary"><%= rec[:title] %></h4>
+            <p class="text-text-secondary text-sm mt-1"><%= rec[:description] %></p>
+            <% if rec[:packages].present? %>
+              <div class="flex flex-wrap gap-1 mt-2">
+                <% rec[:packages].first(5).each do |pkg| %>
+                  <span class="text-xs bg-surface-hover text-text-secondary px-2 py-1 rounded"><%= pkg.is_a?(Array) ? pkg.first : pkg %></span>
+                <% end %>
+              </div>
+            <% end %>
+          </div>
+        </div>
+      <% end %>
+    </div>
+  </div>
+<% end %>

@@ -1,0 +1,28 @@
+<%= form_with model: organization do |f| %>
+  <% if organization.errors.any? %>
+    <div class="bg-critical-bg border border-critical rounded-lg p-4 mb-6">
+      <h3 class="text-critical font-medium mb-2"><%= t("organizations.form.errors", count: organization.errors.count) %></h3>
+      <ul class="list-disc list-inside text-sm text-critical">
+        <% organization.errors.full_messages.each do |message| %>
+          <li><%= message %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <div class="mb-4">
+    <%= f.label :name, t("organizations.labels.name"), class: "block text-sm font-medium text-text-secondary mb-1" %>
+    <%= f.text_field :name, class: "input-field w-full", placeholder: t("organizations.placeholders.name"), required: true %>
+  </div>
+
+  <div class="mb-6">
+    <%= f.label :description, t("organizations.labels.description"), class: "block text-sm font-medium text-text-secondary mb-1" %>
+    <%= f.text_area :description, class: "input-field w-full", rows: 3, placeholder: t("organizations.placeholders.description") %>
+    <p class="text-text-muted text-sm mt-1"><%= t("common.optional") %></p>
+  </div>
+
+  <div class="flex justify-end gap-2">
+    <%= link_to t("common.cancel"), organization.persisted? ? organization_path(organization) : organizations_path, class: "btn-secondary" %>
+    <%= f.submit organization.persisted? ? t("common.save") : t("organizations.form.create"), class: "btn-primary cursor-pointer" %>
+  </div>
+<% end %>

@@ -40,7 +40,10 @@ class ScanService
     # Step 6: Save vulnerabilities
     save_vulnerabilities(vulnerabilities)
 
-    # Step 7: Mark scan as completed
+    # Step 7: Track vulnerability history
+    track_vulnerability_history
+
+    # Step 8: Mark scan as completed
     update_status(:completed, scanned_at: Time.current)
   end
 
@@ -64,7 +67,20 @@ class ScanService
       save_engine_vulnerabilities(vuln_data)
     end
 
+    # Track vulnerability history
+    track_vulnerability_history
+
     update_status(:completed, scanned_at: Time.current)
+  end
+
+  def track_vulnerability_history
+    VulnerabilityHistoryService.new(
+      project: scan.project,
+      current_scan: scan
+    ).track_changes
+  rescue StandardError => e
+    Rails.logger.warn("Failed to track vulnerability history: #{e.message}")
+    # Don't fail the scan if history tracking fails
   end
 
   def update_status(status, **additional_attrs)

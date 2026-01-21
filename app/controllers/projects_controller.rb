@@ -9,6 +9,7 @@ class ProjectsController < ApplicationController
   def show
     @scans = @project.scans.includes(:vulnerabilities).recent.limit(20)
     @vulnerability_summary = @project.vulnerability_summary
+    @history_events = @project.vulnerability_histories.recent.limit(20)
   end
 
   def new
@@ -48,6 +49,6 @@ class ProjectsController < ApplicationController
   end
 
   def project_params
-    params.require(:project).permit(:name, :description, :repository_url)
+    params.require(:project).permit(:name, :description, :repository_url, :organization_id)
   end
 end

@@ -1,0 +1,67 @@
+<% content_for(:page_title) { t("organizations.title") } %>
+
+<div class="flex items-center justify-between mb-6">
+  <div>
+    <h1 class="text-2xl font-bold text-text-primary"><%= t("organizations.title") %></h1>
+    <p class="text-text-secondary mt-1"><%= t("organizations.description") %></p>
+  </div>
+  <%= link_to new_organization_path, class: "btn-primary" do %>
+    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+    </svg>
+    <%= t("organizations.new") %>
+  <% end %>
+</div>
+
+<% if @organizations.any? %>
+  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+    <% @organizations.each do |org| %>
+      <%= link_to organization_path(org), class: "card hover:border-primary transition-colors" do %>
+        <div class="flex items-start justify-between">
+          <div class="flex items-center gap-3">
+            <div class="w-12 h-12 bg-primary-bg rounded-lg flex items-center justify-center">
+              <svg class="w-6 h-6 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+              </svg>
+            </div>
+            <div>
+              <h3 class="text-lg font-semibold text-text-primary"><%= org.name %></h3>
+              <span class="text-xs text-text-muted">@<%= org.slug %></span>
+            </div>
+          </div>
+          <span class="badge <%= current_user.role_in(org) == 'owner' ? 'badge-critical' : 'badge-medium' %>">
+            <%= t("organizations.roles.#{current_user.role_in(org)}") %>
+          </span>
+        </div>
+        <% if org.description.present? %>
+          <p class="text-text-secondary text-sm mt-3 line-clamp-2"><%= org.description %></p>
+        <% end %>
+        <div class="flex items-center gap-4 mt-4 text-sm text-text-muted">
+          <div class="flex items-center gap-1">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+            </svg>
+            <span><%= org.memberships.count %> <%= t("organizations.labels.members") %></span>
+          </div>
+          <div class="flex items-center gap-1">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
+            </svg>
+            <span><%= org.projects.count %> <%= t("organizations.labels.projects") %></span>
+          </div>
+        </div>
+      <% end %>
+    <% end %>
+  </div>
+<% else %>
+  <div class="card text-center py-12">
+    <svg class="w-16 h-16 text-text-muted mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+    </svg>
+    <h3 class="text-lg font-semibold text-text-primary mb-2"><%= t("organizations.empty.title") %></h3>
+    <p class="text-text-secondary mb-4"><%= t("organizations.empty.description") %></p>
+    <%= link_to new_organization_path, class: "btn-primary" do %>
+      <%= t("organizations.empty.create") %>
+    <% end %>
+  </div>
+<% end %>

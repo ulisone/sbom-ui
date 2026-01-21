@@ -29,3 +29,542 @@
 
 en:
   hello: "Hello world"
+
+  # Common
+  common:
+    back: "Back"
+    view: "View"
+    cancel: "Cancel"
+    save: "Save"
+    delete: "Delete"
+    edit: "Edit"
+    actions: "Actions"
+    loading: "Loading..."
+    all: "All"
+    view_all: "View All"
+    optional: "optional"
+    ago: "ago"
+
+  # Notifications
+  notifications:
+    title: "Notifications"
+    unread_count:
+      zero: "No unread notifications"
+      one: "%{count} unread notification"
+      other: "%{count} unread notifications"
+    mark_all_read: "Mark all as read"
+    mark_read: "Mark as read"
+    view_details: "View details"
+    settings: "Settings"
+    all_marked_as_read: "All notifications marked as read"
+
+    empty:
+      title: "No Notifications"
+      description: "You're all caught up! New notifications will appear here."
+
+    scan_complete:
+      title: "Scan completed for %{project}"
+      message: "Found %{vulnerabilities} vulnerabilities (%{critical} critical, %{high} high)"
+      email_subject: "[SBOM Dashboard] Scan completed for %{project}"
+
+    critical_vulnerability:
+      title: "Critical vulnerability detected"
+      message: "%{cve} found in %{package} (%{project})"
+
+    high_vulnerability:
+      title: "High severity vulnerability detected"
+      message: "%{cve} found in %{package} (%{project})"
+
+    report_ready:
+      title: "Report ready"
+      message: "%{type} report for %{project} is ready for download"
+
+    member_added:
+      title: "Added to organization"
+      message: "You have been added to %{organization}"
+
+    vulnerability_alert:
+      email_subject: "[SBOM Dashboard] %{count} vulnerabilities found in %{project}"
+
+    weekly_digest:
+      email_subject: "[SBOM Dashboard] Weekly Security Digest"
+
+  # Notification Preferences
+  notification_preferences:
+    title: "Notification Settings"
+    updated: "Notification preferences updated"
+    webhook_not_configured: "Webhook is not configured"
+    test_webhook_title: "Test Notification"
+    test_webhook_message: "This is a test notification from SBOM Dashboard"
+    webhook_test_success: "Test webhook sent successfully"
+    webhook_test_failed: "Failed to send test webhook"
+
+    email:
+      title: "Email Notifications"
+      enabled: "Enable email notifications"
+      description: "Receive notifications via email"
+
+    webhook:
+      title: "Webhook Notifications"
+      enabled: "Enable webhook notifications"
+      description: "Send notifications to Slack, Discord, or custom webhooks"
+      type: "Webhook Type"
+      url: "Webhook URL"
+      url_hint: "Enter your Slack or Discord webhook URL"
+      test: "Test Webhook"
+      types:
+        slack: "Slack"
+        discord: "Discord"
+        generic: "Generic Webhook"
+
+    events:
+      title: "Notification Events"
+      scan_complete: "Scan Completed"
+      scan_complete_desc: "Notify when a security scan finishes"
+      critical_vuln: "Critical Vulnerabilities"
+      critical_vuln_desc: "Notify when critical vulnerabilities are found"
+      high_vuln: "High Severity Vulnerabilities"
+      high_vuln_desc: "Notify when high severity vulnerabilities are found"
+
+    digest:
+      title: "Digest Frequency"
+      description: "Choose how often to receive notification digests"
+      frequencies:
+        immediate: "Immediate (real-time)"
+        daily: "Daily digest"
+        weekly: "Weekly digest"
+
+  # Policies
+  policies:
+    title: "Policies"
+    description: "Define security policies and compliance rules for your project"
+    new: "New Policy"
+    edit: "Edit Policy"
+    active_violations: "Active Violations"
+
+    types:
+      vulnerability_threshold: "Vulnerability Threshold"
+      license_allowlist: "License Allowlist"
+      license_blocklist: "License Blocklist"
+      dependency_blocklist: "Dependency Blocklist"
+      risk_score_limit: "Risk Score Limit"
+
+    status:
+      enabled: "Enabled"
+      disabled: "Disabled"
+
+    violation_status:
+      resolved: "Resolved"
+      unresolved: "Unresolved"
+
+    labels:
+      name: "Name"
+      description: "Description"
+      type: "Type"
+      status: "Status"
+      violations: "Violations"
+      severity: "Severity"
+      message: "Message"
+      scan: "Scan"
+      date: "Date"
+      enabled: "Enabled"
+
+    placeholders:
+      name: "e.g., No Critical Vulnerabilities"
+      description: "Describe what this policy enforces"
+      select_type: "Select policy type"
+
+    sections:
+      all_policies: "All Policies"
+      rules: "Rules"
+      violations: "Violation History"
+
+    rules:
+      vulnerability_thresholds: "Vulnerability Thresholds"
+      max_critical: "Max Critical"
+      max_high: "Max High"
+      license_list: "License Configuration"
+      licenses: "Licenses"
+      licenses_hint: "Enter one license per line"
+      no_licenses: "No licenses configured"
+      risk_score: "Risk Score Configuration"
+      max_score: "Maximum Risk Score"
+
+    form:
+      create_title: "Create Policy"
+      edit_title: "Edit Policy"
+      create: "Create Policy"
+      errors:
+        one: "%{count} error prevented this policy from being saved"
+        other: "%{count} errors prevented this policy from being saved"
+
+    messages:
+      created: "Policy was successfully created."
+      updated: "Policy was successfully updated."
+      deleted: "Policy was successfully deleted."
+      delete_confirm: "Are you sure you want to delete this policy?"
+
+    actions:
+      enable: "Enable"
+      disable: "Disable"
+
+    violations:
+      none: "No violations detected"
+      critical_exceeded: "Critical vulnerabilities (%{count}) exceed threshold (%{max})"
+      high_exceeded: "High severity vulnerabilities (%{count}) exceed threshold (%{max})"
+      license_not_allowed: "License '%{license}' is not in the allowlist (package: %{package})"
+      license_blocked: "License '%{license}' is blocked (package: %{package})"
+      package_blocked: "Package '%{package}' is blocked: %{reason}"
+      risk_score_exceeded: "Risk score (%{score}) exceeds maximum allowed (%{max})"
+
+    violation_types:
+      critical_threshold_exceeded: "Critical Threshold Exceeded"
+      high_threshold_exceeded: "High Threshold Exceeded"
+      license_not_allowed: "License Not Allowed"
+      license_blocked: "License Blocked"
+      package_blocked: "Package Blocked"
+      risk_score_exceeded: "Risk Score Exceeded"
+
+    notifications:
+      violations_detected: "Policy Violations Detected"
+      critical_violations: "%{count} critical policy violations detected in %{project}"
+
+    empty:
+      title: "No Policies"
+      description: "Create policies to enforce security standards and compliance."
+      create: "Create Your First Policy"
+
+  # Activity Logs
+  activity_logs:
+    title: "Activity Log"
+    description: "Track all actions and changes in your account"
+    today: "Today"
+    yesterday: "Yesterday"
+    system: "System"
+
+    categories:
+      user: "User"
+      project: "Projects"
+      scan: "Scans"
+      report: "Reports"
+      organization: "Organizations"
+      policy: "Policies"
+
+    actions:
+      user_signed_in: "signed in"
+      user_signed_out: "signed out"
+      user_created: "created account"
+      user_updated: "updated profile"
+      project_created: "created project"
+      project_updated: "updated project"
+      project_deleted: "deleted project"
+      scan_started: "started scan for"
+      scan_completed: "completed scan for"
+      scan_failed: "scan failed for"
+      report_generated: "generated report for"
+      report_downloaded: "downloaded report for"
+      organization_created: "created organization"
+      organization_updated: "updated organization"
+      organization_deleted: "deleted organization"
+      organization_member_added: "added member to"
+      organization_member_removed: "removed member from"
+      organization_member_role_changed: "changed member role in"
+      policy_created: "created policy"
+      policy_updated: "updated policy"
+      policy_deleted: "deleted policy"
+      policy_violation: "policy violation in"
+
+    empty:
+      title: "No Activity"
+      description: "Your activity will appear here as you use the application."
+
+  # Projects
+  projects:
+    title: "Projects"
+
+  # Scans
+  scans:
+    dependencies: "Dependencies"
+
+  # Vulnerabilities
+  vulnerabilities:
+    severity:
+      critical: "Critical"
+      high: "High"
+      medium: "Medium"
+      low: "Low"
+      unknown: "Unknown"
+    labels:
+      cve_id: "CVE ID"
+      package: "Package"
+      vulnerable_version: "Vulnerable Version"
+      fixed_version: "Fixed Version"
+      cvss_score: "CVSS Score"
+      description: "Description"
+      references: "References"
+      remediation: "Remediation"
+      scan_details: "Scan Details"
+      project: "Project"
+      scan_date: "Scan Date"
+      sbom_format: "SBOM Format"
+      ecosystem: "Ecosystem"
+      affected_package: "Affected Package"
+    status:
+      fix_available: "Fix Available"
+      no_fix: "No Fix Available"
+
+  # Reports
+  reports:
+    title: "Reports"
+    report_details: "Report Details"
+    download: "Download"
+    generate: "Generate Report"
+    new_report: "New Report"
+    all_reports: "All Reports"
+    all_reports_description: "View and manage all generated security reports"
+
+    status:
+      pending: "Pending"
+      generating: "Generating"
+      completed: "Completed"
+      failed: "Failed"
+
+    types:
+      summary: "Summary"
+      detailed: "Detailed"
+      executive: "Executive"
+      compliance: "Compliance"
+      trend: "Trend"
+
+    messages:
+      generating: "Report is being generated..."
+      generating_in_progress: "Generating Report"
+      generating_description: "Please wait while we generate your report. This page will automatically update."
+      generation_failed: "Report Generation Failed"
+      generation_failed_description: "An error occurred while generating the report. Please try again."
+      download_not_available: "Download not available"
+      deleted: "Report deleted successfully"
+      no_scan_available: "No completed scan available for this project"
+      insufficient_scans: "At least 2 completed scans are required for trend analysis"
+      no_reports: "No Reports Yet"
+      no_reports_description: "Generate reports from your project scans to view them here."
+
+    hints:
+      type: "Choose the type of report to generate"
+      format: "Select the output format for your report"
+      scan: "Select a specific scan or leave blank to use the latest"
+      latest_scan: "Use latest scan"
+
+    placeholders:
+      title: "Custom report title (optional)"
+      description: "Add notes or description for this report"
+
+    labels:
+      project: "Project"
+      type: "Type"
+      format: "Format"
+      status: "Status"
+      generated_at: "Generated At"
+      scan: "Scan"
+      description: "Description"
+      risk_score: "Risk Score"
+      vulnerabilities: "Vulnerabilities"
+      total: "Total"
+      severity: "Severity"
+      title: "Title"
+      name: "Name"
+      version: "Version"
+      ecosystem: "Ecosystem"
+      license: "License"
+      scan_date: "Scan Date"
+      total_vulnerabilities: "Total Vulnerabilities"
+      with_fix: "With Fix Available"
+      without_fix: "Without Fix"
+      by_ecosystem: "By Ecosystem"
+      total_dependencies: "Total Dependencies"
+      unique_packages: "Unique Packages"
+      critical_issues: "Critical Issues"
+      actionable_items: "Actionable Items"
+      current: "Current"
+      from_previous: "from previous scan"
+      no_change: "No change"
+      policy: "Policy"
+      total_licenses: "Total Licenses"
+      unknown_licenses: "Unknown Licenses"
+      known_licenses: "Known Licenses"
+      license_breakdown: "License Breakdown"
+      initial: "Initial"
+      change: "Change"
+      improvement: "Improvement"
+      total_scans: "Total Scans"
+      avg_interval_days: "Avg. Days Between Scans"
+      last_scan: "Last Scan"
+      date: "Date"
+
+    sections:
+      vulnerability_summary: "Vulnerability Summary"
+      dependency_summary: "Dependency Summary"
+      top_vulnerabilities: "Top Vulnerabilities"
+      recommendations: "Recommendations"
+      executive_summary: "Executive Summary"
+      key_findings: "Key Findings"
+      trend_summary: "Trend Summary"
+      compliance_status: "Compliance Status"
+      top_recommendations: "Top Recommendations"
+      by_ecosystem: "By Ecosystem"
+      by_package: "By Package"
+      all_vulnerabilities: "All Vulnerabilities"
+      remediation_plan: "Remediation Plan"
+      all_dependencies: "All Dependencies"
+      compliance_checks: "Compliance Checks"
+      policy_violations: "Policy Violations"
+      license_analysis: "License Analysis"
+      scan_frequency: "Scan Frequency"
+      vulnerability_trends: "Vulnerability Trends"
+      risk_score_trends: "Risk Score Trends"
+      dependency_trends: "Dependency Trends"
+
+    risk_levels:
+      low: "Low Risk"
+      medium: "Medium Risk"
+      high: "High Risk"
+      critical: "Critical Risk"
+
+    risk_level_descriptions:
+      low: "Your project has minimal security concerns"
+      medium: "Some security issues require attention"
+      high: "Significant security issues detected"
+      critical: "Immediate action required for critical issues"
+
+    compliance:
+      passing: "Passing"
+      failing: "Failing"
+      passing_description: "Risk score %{score} is below threshold %{threshold}"
+      failing_description: "Risk score %{score} exceeds threshold %{threshold}"
+
+    checks:
+      no_critical_pass: "No critical vulnerabilities found"
+      no_critical_fail: "%{count} critical vulnerabilities found"
+      high_fix_pass: "All high severity vulnerabilities have fixes available"
+      high_fix_warn: "%{count} high severity vulnerabilities have no fix available"
+      risk_score_pass: "Risk score is within acceptable limits"
+      risk_score_fail: "Risk score %{score} exceeds acceptable limits"
+
+    policies:
+      no_critical_vulnerabilities: "No Critical Vulnerabilities"
+
+    findings:
+      critical_found: "%{count} critical vulnerabilities require immediate attention"
+      high_found: "%{count} high severity vulnerabilities detected"
+      fixes_available: "%{count} vulnerabilities have fixes available"
+
+    recommendations:
+      fix_critical: "Fix Critical Vulnerabilities"
+      fix_critical_desc: "Immediately address %{count} critical vulnerabilities"
+      upgrade_packages: "Upgrade Vulnerable Packages"
+      upgrade_packages_desc: "%{count} high severity vulnerabilities can be fixed by upgrading"
+      mitigate_no_fix: "Mitigate Vulnerabilities Without Fix"
+      mitigate_no_fix_desc: "%{count} critical/high vulnerabilities have no fix available"
+      regular_scan: "Enable Regular Scanning"
+      regular_scan_desc: "Set up automated scanning to catch vulnerabilities early"
+
+    remediation:
+      phase_critical: "Immediate - Fix Critical Issues"
+      phase_high: "Short-term - Address High Severity"
+      phase_medium_low: "Medium-term - Clean Up Remaining"
+
+  # Vulnerability History
+  vulnerability_history:
+    discovered: "New vulnerability discovered in %{package} (%{severity})"
+    fixed: "Vulnerability fixed in %{package}"
+    upgraded: "Severity increased from %{from} to %{to}"
+    downgraded: "Severity decreased from %{from} to %{to}"
+    reappeared: "Vulnerability reappeared in %{package} (%{severity})"
+
+  # Projects
+  projects:
+    vulnerability_history: "Vulnerability History"
+    last_n_events:
+      one: "Last %{count} event"
+      other: "Last %{count} events"
+    no_history: "No vulnerability history yet"
+    run_scan_for_history: "Run a scan to start tracking vulnerabilities"
+    personal_project: "Personal (No Organization)"
+    organization_hint: "Assign this project to an organization to share it with team members"
+    labels:
+      name: "Name"
+      owner: "Owner"
+      scans: "Scans"
+      vulnerabilities: "Vulnerabilities"
+
+  # Organizations
+  organizations:
+    title: "Organizations"
+    description: "Manage your teams and collaborate on security projects"
+    new: "New Organization"
+
+    roles:
+      owner: "Owner"
+      admin: "Admin"
+      member: "Member"
+      viewer: "Viewer"
+
+    labels:
+      name: "Name"
+      description: "Description"
+      members: "Members"
+      projects: "Projects"
+      member: "Member"
+      role: "Role"
+      joined: "Joined"
+      email: "Email"
+      total_vulnerabilities: "Total Vulnerabilities"
+
+    sections:
+      members: "Team Members"
+      projects: "Organization Projects"
+
+    placeholders:
+      name: "Enter organization name"
+      description: "Brief description of your organization"
+
+    form:
+      create_title: "Create Organization"
+      edit_title: "Edit Organization"
+      create: "Create Organization"
+      errors:
+        one: "%{count} error prevented this organization from being saved"
+        other: "%{count} errors prevented this organization from being saved"
+
+    messages:
+      created: "Organization was successfully created."
+      updated: "Organization was successfully updated."
+      deleted: "Organization was successfully deleted."
+      unauthorized: "You don't have permission to access this organization."
+
+    members:
+      add: "Add Member"
+      add_title: "Add Team Member"
+      added: "Member was successfully added."
+      updated: "Member role was updated."
+      removed: "Member was removed from the organization."
+      remove_confirm: "Are you sure you want to remove this member?"
+      user_not_found: "No user found with that email address."
+      already_member: "This user is already a member of this organization."
+      must_have_owner: "Organization must have at least one owner."
+      cannot_remove_self: "You cannot remove yourself from the organization."
+      you: "(You)"
+
+    projects:
+      empty: "No projects in this organization yet."
+
+    empty:
+      title: "No Organizations"
+      description: "Create an organization to collaborate with your team."
+      create: "Create Your First Organization"
+
+    danger_zone:
+      title: "Danger Zone"
+      delete_warning: "Deleting an organization will remove all member associations. Projects will be disassociated but not deleted."
+      delete: "Delete Organization"
+      delete_confirm: "Are you sure you want to delete this organization? This action cannot be undone."

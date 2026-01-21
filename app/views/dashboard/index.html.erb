@@ -64,11 +64,21 @@
 </div>
 
 <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-  <!-- Vulnerability Summary -->
-  <div class="card lg:col-span-1">
+  <!-- Vulnerability Summary with Chart -->
+  <div class="card lg:col-span-1"
+       data-controller="vulnerability-chart"
+       data-vulnerability-chart-severity-value="<%= @vulnerability_stats.to_json %>"
+       data-vulnerability-chart-trends-value="<%= @vulnerability_trends.to_json %>">
     <h3 class="text-lg font-semibold text-text-primary mb-4">Vulnerability Summary</h3>
 
-    <div class="space-y-4">
+    <!-- Doughnut Chart -->
+    <% if @vulnerability_stats[:total] > 0 %>
+      <div class="h-48 mb-4">
+        <canvas data-vulnerability-chart-target="severityChart"></canvas>
+      </div>
+    <% end %>
+
+    <div class="space-y-3">
       <div class="flex items-center justify-between">
         <div class="flex items-center gap-2">
           <span class="w-3 h-3 rounded-full bg-critical"></span>
@@ -181,6 +191,18 @@
     <% end %>
   </div>
 </div>
+
+<!-- Vulnerability Trends Chart -->
+<% if @vulnerability_trends.size > 1 %>
+  <div class="card mt-6"
+       data-controller="vulnerability-chart"
+       data-vulnerability-chart-trends-value="<%= @vulnerability_trends.to_json %>">
+    <h3 class="text-lg font-semibold text-text-primary mb-4">Vulnerability Trends</h3>
+    <div class="h-64">
+      <canvas data-vulnerability-chart-target="trendChart"></canvas>
+    </div>
+  </div>
+<% end %>
 
 <!-- Projects List -->
 <div class="card mt-6">

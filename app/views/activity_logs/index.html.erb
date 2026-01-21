@@ -1,0 +1,105 @@
+<% content_for(:page_title) { t("activity_logs.title") } %>
+
+<div class="flex items-center justify-between mb-6">
+  <div>
+    <h1 class="text-2xl font-bold text-text-primary"><%= t("activity_logs.title") %></h1>
+    <p class="text-text-secondary mt-1"><%= t("activity_logs.description") %></p>
+  </div>
+</div>
+
+<!-- Filters -->
+<div class="card mb-6">
+  <div class="flex flex-wrap gap-2">
+    <%= link_to t("common.all"),
+        activity_logs_path,
+        class: "btn-sm #{ @filter.blank? ? 'btn-primary' : 'btn-secondary' }" %>
+    <% %w[user project scan report organization policy].each do |category| %>
+      <%= link_to t("activity_logs.categories.#{category}"),
+          activity_logs_path(filter: category),
+          class: "btn-sm #{ @filter == category ? 'btn-primary' : 'btn-secondary' }" %>
+    <% end %>
+  </div>
+</div>
+
+<!-- Activity Timeline -->
+<div class="card">
+  <% if @logs.any? %>
+    <div class="space-y-0">
+      <% @logs.group_by { |log| log.created_at.to_date }.each do |date, logs| %>
+        <div class="mb-6">
+          <h3 class="text-sm font-semibold text-text-muted mb-3 sticky top-0 bg-bg-primary py-2">
+            <% if date == Date.current %>
+              <%= t("activity_logs.today") %>
+            <% elsif date == Date.current - 1 %>
+              <%= t("activity_logs.yesterday") %>
+            <% else %>
+              <%= l(date, format: :long) %>
+            <% end %>
+          </h3>
+
+          <div class="space-y-4 pl-4 border-l-2 border-border">
+            <% logs.each do |log| %>
+              <div class="relative flex gap-4">
+                <!-- Timeline dot -->
+                <div class="absolute -left-[1.3rem] w-4 h-4 rounded-full bg-bg-primary border-2 border-border flex items-center justify-center">
+                  <div class="w-2 h-2 rounded-full <%= log.icon_class.gsub('text-', 'bg-') %>"></div>
+                </div>
+
+                <!-- Content -->
+                <div class="flex-1 pb-4">
+                  <div class="flex items-start justify-between gap-4">
+                    <div class="flex items-center gap-3">
+                      <div class="w-8 h-8 rounded-full flex items-center justify-center bg-surface">
+                        <svg class="w-4 h-4 <%= log.icon_class %>" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="<%= log.icon_path %>" />
+                        </svg>
+                      </div>
+                      <div>
+                        <p class="text-text-primary">
+                          <% if log.user %>
+                            <span class="font-medium"><%= log.user.display_name %></span>
+                          <% else %>
+                            <span class="text-text-muted"><%= t("activity_logs.system") %></span>
+                          <% end %>
+                          <span class="text-text-secondary"><%= log.action_display %></span>
+                          <% if log.trackable_display %>
+                            <span class="font-medium"><%= log.trackable_display %></span>
+                          <% end %>
+                        </p>
+                        <% if log.details.present? && log.details.any? %>
+                          <p class="text-sm text-text-muted mt-1">
+                            <% log.details.except("name", "id").each do |key, value| %>
+                              <span class="mr-3"><%= key.titleize %>: <%= value %></span>
+                            <% end %>
+                          </p>
+                        <% end %>
+                      </div>
+                    </div>
+                    <span class="text-sm text-text-muted whitespace-nowrap">
+                      <%= log.created_at.strftime("%H:%M") %>
+                    </span>
+                  </div>
+                </div>
+              </div>
+            <% end %>
+          </div>
+        </div>
+      <% end %>
+    </div>
+
+    <!-- Pagination -->
+    <% if @logs.total_pages > 1 %>
+      <div class="flex justify-center pt-4 border-t border-border">
+        <%= paginate @logs %>
+      </div>
+    <% end %>
+  <% else %>
+    <div class="text-center py-12">
+      <svg class="w-16 h-16 text-text-muted mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+      </svg>
+      <h3 class="text-lg font-semibold text-text-primary mb-2"><%= t("activity_logs.empty.title") %></h3>
+      <p class="text-text-secondary"><%= t("activity_logs.empty.description") %></p>
+    </div>
+  <% end %>
+</div>

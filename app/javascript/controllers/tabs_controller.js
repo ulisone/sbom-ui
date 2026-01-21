@@ -5,13 +5,16 @@ export default class extends Controller {
 
   connect() {
     // Initialize with first tab active
+    this.currentIndex = 0
     this.activateFirstTab()
   }
 
   activateFirstTab() {
     if (this.tabTargets.length > 0) {
       const firstTab = this.tabTargets[0]
-      this.activateTab(firstTab.dataset.tabId)
+      const tabId = firstTab.dataset.tabId || "0"
+      this.activateTab(tabId)
+      this.updateTabStyles(0)
     }
   }
 
@@ -21,8 +24,43 @@ export default class extends Controller {
     this.activateTab(tabId)
   }
 
+  // Index-based tab selection (for tabs without tabId)
+  select(event) {
+    event.preventDefault()
+    const index = parseInt(event.currentTarget.dataset.tabsIndex || "0")
+    this.currentIndex = index
+    this.activateByIndex(index)
+    this.updateTabStyles(index)
+  }
+
+  activateByIndex(index) {
+    this.panelTargets.forEach((panel, i) => {
+      if (i === index) {
+        panel.classList.remove("hidden")
+        panel.classList.add("block")
+        this.enableInputs(panel)
+      } else {
+        panel.classList.add("hidden")
+        panel.classList.remove("block")
+        this.disableInputs(panel)
+      }
+    })
+  }
+
+  updateTabStyles(activeIndex) {
+    this.tabTargets.forEach((tab, i) => {
+      if (i === activeIndex) {
+        tab.classList.add("text-primary", "border-b-2", "border-primary")
+        tab.classList.remove("text-text-secondary", "hover:text-text-primary")
+      } else {
+        tab.classList.remove("text-primary", "border-b-2", "border-primary")
+        tab.classList.add("text-text-secondary", "hover:text-text-primary")
+      }
+    })
+  }
+
   activateTab(tabId) {
-    // Update tab styles
+    // Update tab styles (legacy tabId-based)
     this.tabTargets.forEach(tab => {
       if (tab.dataset.tabId === tabId) {
         tab.classList.add("bg-primary", "text-white")
@@ -37,11 +75,9 @@ export default class extends Controller {
     this.panelTargets.forEach(panel => {
       if (panel.dataset.tabId === tabId) {
         panel.classList.remove("hidden")
-        // Enable/disable inputs in this panel
         this.enableInputs(panel)
       } else {
         panel.classList.add("hidden")
-        // Disable inputs in hidden panels
         this.disableInputs(panel)
       }
     })
@@ -55,7 +91,6 @@ export default class extends Controller {
 
   disableInputs(panel) {
     panel.querySelectorAll("input, select, textarea").forEach(input => {
-      // Don't disable the source input hidden field
       if (!input.hasAttribute("data-tabs-target")) {
         input.disabled = true
       }

@@ -7,8 +7,30 @@ Rails.application.routes.draw do
 
     get "dashboard", to: "dashboard#index"
 
+    resources :organizations do
+      resources :memberships, only: [:create, :update, :destroy]
+    end
+
     resources :projects do
       resources :scans, only: [:new, :create]
+      resources :reports, only: [:new, :create]
+      resources :policies do
+        member do
+          patch :toggle
+        end
+      end
+      member do
+        post :generate_summary_report, to: "reports#generate_summary_report"
+        post :generate_detailed_report, to: "reports#generate_detailed_report"
+        post :generate_executive_report, to: "reports#generate_executive_report"
+        post :generate_trend_report, to: "reports#generate_trend_report"
+      end
+    end
+
+    resources :reports, only: [:index, :show, :destroy] do
+      member do
+        get :download
+      end
     end
 
     resources :scans, only: [:index, :show] do
@@ -20,6 +42,21 @@ Rails.application.routes.draw do
     end
 
     resources :vulnerabilities, only: [:index, :show]
+
+    resources :notifications, only: [:index, :show] do
+      member do
+        patch :mark_as_read
+      end
+      collection do
+        post :mark_all_as_read
+      end
+    end
+
+    resource :notification_preferences, only: [:edit, :update] do
+      post :test_webhook
+    end
+
+    resources :activity_logs, only: [:index]
 
     # API routes for SBOM Engine integration
     namespace :api do

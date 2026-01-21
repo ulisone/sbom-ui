@@ -58,9 +58,19 @@
       <% end %>
     </div>
   <% else %>
-    <!-- Vulnerability Summary -->
-    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+    <!-- Vulnerability Summary with Chart -->
+    <div class="grid grid-cols-1 md:grid-cols-5 gap-4 mb-6">
       <% summary = @scan.vulnerability_summary %>
+
+      <!-- Severity Chart -->
+      <div class="card md:col-span-1 flex items-center justify-center"
+           data-controller="vulnerability-chart"
+           data-vulnerability-chart-severity-value="<%= vulnerability_severity_data(@scan).to_json %>">
+        <div class="w-full h-32">
+          <canvas data-vulnerability-chart-target="severityChart"></canvas>
+        </div>
+      </div>
+
       <div class="card flex items-center gap-4">
         <div class="w-10 h-10 bg-critical-bg rounded-lg flex items-center justify-center">
           <span class="text-critical font-bold"><%= summary[:critical] %></span>
@@ -87,7 +97,33 @@
       </div>
     </div>
 
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <!-- Tabs for different views -->
+    <div class="mb-6" data-controller="tabs">
+      <div class="flex border-b border-border">
+        <button class="px-4 py-2 text-sm font-medium text-primary border-b-2 border-primary"
+                data-tabs-target="tab"
+                data-action="click->tabs#select"
+                data-tabs-index="0">
+          <%= t('scans.vulnerabilities_tab', default: 'Vulnerabilities') %>
+        </button>
+        <button class="px-4 py-2 text-sm font-medium text-text-secondary hover:text-text-primary"
+                data-tabs-target="tab"
+                data-action="click->tabs#select"
+                data-tabs-index="1">
+          <%= t('scans.dependencies_tab', default: 'Dependencies') %>
+        </button>
+        <button class="px-4 py-2 text-sm font-medium text-text-secondary hover:text-text-primary"
+                data-tabs-target="tab"
+                data-action="click->tabs#select"
+                data-tabs-index="2">
+          <%= t('scans.tree_view_tab', default: 'Tree View') %>
+        </button>
+      </div>
+    </div>
+
+    <!-- Tab Panels -->
+    <div data-tabs-target="panel" class="block">
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
       <!-- Vulnerabilities -->
       <div class="card lg:col-span-2">
         <h3 class="text-lg font-semibold text-text-primary mb-4"><%= t('vulnerabilities.title') %> (<%= @vulnerabilities.count %>)</h3>
@@ -134,13 +170,13 @@
         <% end %>
       </div>
 
-      <!-- Dependencies -->
+      <!-- Dependencies Summary (sidebar) -->
       <div class="card lg:col-span-1">
         <h3 class="text-lg font-semibold text-text-primary mb-4"><%= t('scans.dependencies') %> (<%= @dependencies.count %>)</h3>
 
         <% if @dependencies.any? %>
           <div class="max-h-96 overflow-y-auto space-y-2">
-            <% @dependencies.each do |dep| %>
+            <% @dependencies.first(20).each do |dep| %>
               <div class="flex items-center justify-between py-2 border-b border-border last:border-0">
                 <div>
                   <p class="text-sm text-text-primary"><%= dep.name %></p>
@@ -149,11 +185,58 @@
                 <span class="text-xs text-text-secondary font-mono"><%= dep.version %></span>
               </div>
             <% end %>
+            <% if @dependencies.count > 20 %>
+              <p class="text-text-muted text-center text-xs py-2">
+                ... <%= t('scans.and_more', count: @dependencies.count - 20, default: "and %{count} more") %>
+              </p>
+            <% end %>
           </div>
         <% else %>
           <p class="text-text-secondary text-center py-4"><%= t('scans.no_dependencies') %></p>
         <% end %>
       </div>
+      </div>
+    </div>
+
+    <!-- Dependencies Panel -->
+    <div data-tabs-target="panel" class="hidden">
+      <div class="card">
+        <h3 class="text-lg font-semibold text-text-primary mb-4"><%= t('scans.all_dependencies', default: 'All Dependencies') %> (<%= @dependencies.count %>)</h3>
+
+        <% if @dependencies.any? %>
+          <div class="table-container">
+            <table class="table">
+              <thead>
+                <tr>
+                  <th><%= t('reports.labels.name', default: 'Name') %></th>
+                  <th><%= t('reports.labels.version', default: 'Version') %></th>
+                  <th><%= t('reports.labels.ecosystem', default: 'Ecosystem') %></th>
+                  <th><%= t('reports.labels.license', default: 'License') %></th>
+                  <th><%= t('scans.purl', default: 'PURL') %></th>
+                </tr>
+              </thead>
+              <tbody>
+                <% @dependencies.each do |dep| %>
+                  <tr>
+                    <td class="font-medium text-text-primary"><%= dep.name %></td>
+                    <td class="font-mono text-sm"><%= dep.version %></td>
+                    <td><span class="badge-secondary"><%= dep.ecosystem %></span></td>
+                    <td class="text-text-muted"><%= dep.license || '-' %></td>
+                    <td class="text-xs text-text-muted font-mono max-w-xs truncate"><%= dep.purl %></td>
+                  </tr>
+                <% end %>
+              </tbody>
+            </table>
+          </div>
+        <% else %>
+          <p class="text-text-secondary text-center py-8"><%= t('scans.no_dependencies') %></p>
+        <% end %>
+      </div>
+    </div>
+
+    <!-- Tree View Panel -->
+    <div data-tabs-target="panel" class="hidden">
+      <%= render "scans/dependency_tree", dependency_tree_data: dependency_tree_data(@scan) %>
     </div>
   <% end %>
 </div>

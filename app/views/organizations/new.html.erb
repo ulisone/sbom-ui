@@ -1,0 +1,17 @@
+<% content_for(:page_title) { t("organizations.new") } %>
+
+<div class="max-w-2xl mx-auto">
+  <div class="flex items-center gap-2 mb-6">
+    <%= link_to organizations_path, class: "text-text-secondary hover:text-text-primary" do %>
+      <%= t("organizations.title") %>
+    <% end %>
+    <span class="text-text-muted">/</span>
+    <span class="text-text-primary"><%= t("organizations.new") %></span>
+  </div>
+
+  <div class="card">
+    <h2 class="text-xl font-semibold text-text-primary mb-6"><%= t("organizations.form.create_title") %></h2>
+
+    <%= render "form", organization: @organization %>
+  </div>
+</div>

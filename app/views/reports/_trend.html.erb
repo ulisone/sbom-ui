@@ -1,0 +1,188 @@
+<%# Trend Report Partial %>
+<% content = report.content.with_indifferent_access %>
+
+<!-- Improvement Metrics -->
+<% if content[:improvement_metrics].present? %>
+  <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+    <div class="card text-center">
+      <p class="text-3xl font-bold text-text-muted"><%= content[:improvement_metrics][:initial_vulnerabilities] || 0 %></p>
+      <p class="text-text-secondary text-sm"><%= t('reports.labels.initial') %></p>
+    </div>
+    <div class="card text-center">
+      <p class="text-3xl font-bold text-text-primary"><%= content[:improvement_metrics][:current_vulnerabilities] || 0 %></p>
+      <p class="text-text-secondary text-sm"><%= t('reports.labels.current') %></p>
+    </div>
+    <div class="card text-center">
+      <% reduction = content[:improvement_metrics][:reduction].to_i %>
+      <p class="text-3xl font-bold <%= reduction > 0 ? 'text-low' : (reduction < 0 ? 'text-critical' : 'text-text-muted') %>">
+        <%= reduction > 0 ? "-#{reduction}" : (reduction < 0 ? "+#{reduction.abs}" : "0") %>
+      </p>
+      <p class="text-text-secondary text-sm"><%= t('reports.labels.change') %></p>
+    </div>
+    <div class="card text-center">
+      <% percentage = content[:improvement_metrics][:reduction_percentage].to_f %>
+      <p class="text-3xl font-bold <%= percentage > 0 ? 'text-low' : (percentage < 0 ? 'text-critical' : 'text-text-muted') %>">
+        <%= percentage > 0 ? "-#{percentage}%" : (percentage < 0 ? "+#{percentage.abs}%" : "0%") %>
+      </p>
+      <p class="text-text-secondary text-sm"><%= t('reports.labels.improvement') %></p>
+    </div>
+  </div>
+<% end %>
+
+<!-- Scan Frequency -->
+<% if content[:scan_frequency].present? %>
+  <div class="card mb-6">
+    <h3 class="text-lg font-semibold text-text-primary mb-4"><%= t('reports.sections.scan_frequency') %></h3>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div class="p-4 bg-background rounded-lg text-center">
+        <p class="text-2xl font-bold text-primary"><%= content[:scan_frequency][:total_scans] || 0 %></p>
+        <p class="text-text-secondary text-sm"><%= t('reports.labels.total_scans') %></p>
+      </div>
+      <div class="p-4 bg-background rounded-lg text-center">
+        <p class="text-2xl font-bold text-text-primary"><%= content[:scan_frequency][:average_interval_days] || 0 %></p>
+        <p class="text-text-secondary text-sm"><%= t('reports.labels.avg_interval_days') %></p>
+      </div>
+      <div class="p-4 bg-background rounded-lg text-center">
+        <% if content[:scan_frequency][:last_scan] %>
+          <p class="text-lg font-bold text-text-primary"><%= l(Time.parse(content[:scan_frequency][:last_scan].to_s), format: :short) rescue content[:scan_frequency][:last_scan] %></p>
+        <% else %>
+          <p class="text-lg font-bold text-text-muted">-</p>
+        <% end %>
+        <p class="text-text-secondary text-sm"><%= t('reports.labels.last_scan') %></p>
+      </div>
+    </div>
+  </div>
+<% end %>
+
+<!-- Vulnerability Trends Chart -->
+<% if content[:vulnerability_trends].present? && content[:vulnerability_trends].size > 1 %>
+  <div class="card mb-6">
+    <h3 class="text-lg font-semibold text-text-primary mb-4"><%= t('reports.sections.vulnerability_trends') %></h3>
+
+    <!-- Trend Chart -->
+    <div class="h-64 flex items-end gap-2 pb-8 relative">
+      <% trends = content[:vulnerability_trends] %>
+      <% max_total = trends.map { |t| t[:total].to_i }.max || 1 %>
+
+      <% trends.each_with_index do |trend, index| %>
+        <div class="flex-1 flex flex-col items-center group relative">
+          <!-- Stacked Bar -->
+          <div class="w-full flex flex-col-reverse" style="height: <%= ((trend[:total].to_i).to_f / max_total * 200).to_i %>px; min-height: 4px;">
+            <% if trend[:low].to_i > 0 %>
+              <div class="w-full bg-low" style="height: <%= (trend[:low].to_f / trend[:total] * 100).to_i %>%"></div>
+            <% end %>
+            <% if trend[:medium].to_i > 0 %>
+              <div class="w-full bg-medium" style="height: <%= (trend[:medium].to_f / trend[:total] * 100).to_i %>%"></div>
+            <% end %>
+            <% if trend[:high].to_i > 0 %>
+              <div class="w-full bg-high" style="height: <%= (trend[:high].to_f / trend[:total] * 100).to_i %>%"></div>
+            <% end %>
+            <% if trend[:critical].to_i > 0 %>
+              <div class="w-full bg-critical rounded-t" style="height: <%= (trend[:critical].to_f / trend[:total] * 100).to_i %>%"></div>
+            <% end %>
+          </div>
+
+          <!-- Date Label -->
+          <span class="text-xs text-text-muted mt-2 absolute -bottom-6">
+            <%= trend[:date] ? (Time.parse(trend[:date].to_s).strftime("%m/%d") rescue trend[:date].to_s[5..9]) : "" %>
+          </span>
+
+          <!-- Tooltip -->
+          <div class="hidden group-hover:block absolute bottom-full mb-2 bg-surface-elevated border border-border rounded-lg p-2 shadow-lg z-10 text-xs whitespace-nowrap">
+            <p class="font-medium text-text-primary"><%= t('reports.labels.total') %>: <%= trend[:total] %></p>
+            <p class="text-critical">C: <%= trend[:critical] %></p>
+            <p class="text-high">H: <%= trend[:high] %></p>
+            <p class="text-medium">M: <%= trend[:medium] %></p>
+            <p class="text-low">L: <%= trend[:low] %></p>
+          </div>
+        </div>
+      <% end %>
+    </div>
+
+    <!-- Legend -->
+    <div class="flex justify-center gap-6 mt-4 pt-4 border-t border-border">
+      <div class="flex items-center gap-2">
+        <div class="w-3 h-3 rounded bg-critical"></div>
+        <span class="text-xs text-text-secondary"><%= t('vulnerabilities.severity.critical') %></span>
+      </div>
+      <div class="flex items-center gap-2">
+        <div class="w-3 h-3 rounded bg-high"></div>
+        <span class="text-xs text-text-secondary"><%= t('vulnerabilities.severity.high') %></span>
+      </div>
+      <div class="flex items-center gap-2">
+        <div class="w-3 h-3 rounded bg-medium"></div>
+        <span class="text-xs text-text-secondary"><%= t('vulnerabilities.severity.medium') %></span>
+      </div>
+      <div class="flex items-center gap-2">
+        <div class="w-3 h-3 rounded bg-low"></div>
+        <span class="text-xs text-text-secondary"><%= t('vulnerabilities.severity.low') %></span>
+      </div>
+    </div>
+  </div>
+<% end %>
+
+<!-- Risk Score Trends -->
+<% if content[:risk_score_trends].present? && content[:risk_score_trends].size > 1 %>
+  <div class="card mb-6">
+    <h3 class="text-lg font-semibold text-text-primary mb-4"><%= t('reports.sections.risk_score_trends') %></h3>
+
+    <div class="h-48 flex items-end gap-2 pb-8 relative">
+      <% scores = content[:risk_score_trends] %>
+
+      <% scores.each_with_index do |data, index| %>
+        <div class="flex-1 flex flex-col items-center group relative">
+          <div class="w-full rounded-t <%= risk_score_bg_class(data[:score]) %>" style="height: <%= (data[:score].to_i * 1.8).to_i %>px; min-height: 4px;">
+          </div>
+          <span class="text-xs text-text-muted mt-2 absolute -bottom-6">
+            <%= data[:date] ? (Time.parse(data[:date].to_s).strftime("%m/%d") rescue data[:date].to_s[5..9]) : "" %>
+          </span>
+
+          <!-- Tooltip -->
+          <div class="hidden group-hover:block absolute bottom-full mb-2 bg-surface-elevated border border-border rounded-lg p-2 shadow-lg z-10">
+            <p class="font-medium <%= risk_score_text_class(data[:score]) %>"><%= data[:score] %></p>
+          </div>
+        </div>
+      <% end %>
+    </div>
+  </div>
+<% end %>
+
+<!-- Dependency Trends -->
+<% if content[:dependency_trends].present? && content[:dependency_trends].size > 1 %>
+  <div class="card">
+    <h3 class="text-lg font-semibold text-text-primary mb-4"><%= t('reports.sections.dependency_trends') %></h3>
+
+    <div class="overflow-x-auto">
+      <table class="w-full">
+        <thead>
+          <tr class="border-b border-border">
+            <th class="text-left py-2 text-text-secondary font-medium"><%= t('reports.labels.date') %></th>
+            <th class="text-right py-2 text-text-secondary font-medium"><%= t('reports.labels.total_dependencies') %></th>
+            <th class="text-right py-2 text-text-secondary font-medium"><%= t('reports.labels.change') %></th>
+          </tr>
+        </thead>
+        <tbody>
+          <% content[:dependency_trends].each_with_index do |trend, index| %>
+            <% prev_total = index > 0 ? content[:dependency_trends][index - 1][:total].to_i : trend[:total].to_i %>
+            <% change = trend[:total].to_i - prev_total %>
+            <tr class="border-b border-border">
+              <td class="py-3 text-text-primary">
+                <%= trend[:date] ? l(Time.parse(trend[:date].to_s), format: :short) rescue trend[:date] : "-" %>
+              </td>
+              <td class="py-3 text-right text-text-primary font-medium"><%= trend[:total] %></td>
+              <td class="py-3 text-right">
+                <% if change > 0 %>
+                  <span class="text-medium">+<%= change %></span>
+                <% elsif change < 0 %>
+                  <span class="text-low"><%= change %></span>
+                <% else %>
+                  <span class="text-text-muted">-</span>
+                <% end %>
+              </td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+<% end %>

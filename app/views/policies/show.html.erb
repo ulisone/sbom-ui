@@ -1,0 +1,122 @@
+<% content_for(:page_title) { @policy.name } %>
+
+<div class="flex items-center justify-between mb-6">
+  <div>
+    <div class="flex items-center gap-2 mb-2">
+      <%= link_to @project.name, project_path(@project), class: "text-text-secondary hover:text-text-primary" %>
+      <span class="text-text-muted">/</span>
+      <%= link_to t("policies.title"), project_policies_path(@project), class: "text-text-secondary hover:text-text-primary" %>
+      <span class="text-text-muted">/</span>
+      <span class="text-text-primary"><%= @policy.name %></span>
+    </div>
+    <% if @policy.description.present? %>
+      <p class="text-text-secondary"><%= @policy.description %></p>
+    <% end %>
+  </div>
+  <div class="flex items-center gap-2">
+    <%= button_to toggle_project_policy_path(@project, @policy), method: :patch, class: "btn-secondary" do %>
+      <%= @policy.enabled? ? t("policies.actions.disable") : t("policies.actions.enable") %>
+    <% end %>
+    <%= link_to edit_project_policy_path(@project, @policy), class: "btn-secondary" do %>
+      <%= t("common.edit") %>
+    <% end %>
+  </div>
+</div>
+
+<!-- Policy Info -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+  <div class="card">
+    <p class="text-text-muted text-sm mb-1"><%= t("policies.labels.type") %></p>
+    <p class="font-medium text-text-primary"><%= @policy.type_display %></p>
+  </div>
+  <div class="card">
+    <p class="text-text-muted text-sm mb-1"><%= t("policies.labels.status") %></p>
+    <span class="badge <%= @policy.enabled? ? 'badge-low' : 'badge-medium' %>">
+      <%= @policy.enabled? ? t("policies.status.enabled") : t("policies.status.disabled") %>
+    </span>
+  </div>
+  <div class="card">
+    <p class="text-text-muted text-sm mb-1"><%= t("policies.labels.violations") %></p>
+    <p class="font-medium text-text-primary"><%= @policy.policy_violations.unresolved.count %></p>
+  </div>
+</div>
+
+<!-- Rules -->
+<div class="card mb-6">
+  <h3 class="text-lg font-semibold text-text-primary mb-4"><%= t("policies.sections.rules") %></h3>
+
+  <% case @policy.policy_type %>
+  <% when Policy::VULNERABILITY_THRESHOLD %>
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div class="p-3 bg-surface rounded-lg">
+        <p class="text-text-muted text-sm"><%= t("policies.rules.max_critical") %></p>
+        <p class="text-xl font-bold text-critical"><%= @policy.max_critical || "∞" %></p>
+      </div>
+      <div class="p-3 bg-surface rounded-lg">
+        <p class="text-text-muted text-sm"><%= t("policies.rules.max_high") %></p>
+        <p class="text-xl font-bold text-high"><%= @policy.max_high || "∞" %></p>
+      </div>
+    </div>
+  <% when Policy::LICENSE_ALLOWLIST, Policy::LICENSE_BLOCKLIST %>
+    <div class="flex flex-wrap gap-2">
+      <% @policy.license_list.each do |license| %>
+        <span class="badge"><%= license %></span>
+      <% end %>
+      <% if @policy.license_list.empty? %>
+        <p class="text-text-muted"><%= t("policies.rules.no_licenses") %></p>
+      <% end %>
+    </div>
+  <% when Policy::RISK_SCORE_LIMIT %>
+    <div class="p-3 bg-surface rounded-lg inline-block">
+      <p class="text-text-muted text-sm"><%= t("policies.rules.max_score") %></p>
+      <p class="text-xl font-bold text-primary"><%= @policy.max_risk_score %></p>
+    </div>
+  <% end %>
+</div>
+
+<!-- Violations History -->
+<div class="card">
+  <h3 class="text-lg font-semibold text-text-primary mb-4"><%= t("policies.sections.violations") %></h3>
+
+  <% if @violations.any? %>
+    <div class="table-container">
+      <table class="table">
+        <thead>
+          <tr>
+            <th><%= t("policies.labels.severity") %></th>
+            <th><%= t("policies.labels.message") %></th>
+            <th><%= t("policies.labels.scan") %></th>
+            <th><%= t("policies.labels.date") %></th>
+            <th><%= t("policies.labels.status") %></th>
+          </tr>
+        </thead>
+        <tbody>
+          <% @violations.each do |violation| %>
+            <tr>
+              <td><span class="<%= violation.severity_class %>"><%= violation.severity_display %></span></td>
+              <td class="text-text-primary"><%= violation.message %></td>
+              <td>
+                <%= link_to "##{violation.scan_id}", scan_path(violation.scan), class: "text-primary hover:underline" %>
+              </td>
+              <td class="text-text-muted"><%= violation.created_at.strftime("%Y-%m-%d %H:%M") %></td>
+              <td>
+                <% if violation.resolved? %>
+                  <span class="badge badge-low"><%= t("policies.violation_status.resolved") %></span>
+                <% else %>
+                  <span class="badge badge-critical"><%= t("policies.violation_status.unresolved") %></span>
+                <% end %>
+              </td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+  <% else %>
+    <div class="text-center py-8">
+      <svg class="w-12 h-12 text-low mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+      </svg>
+      <p class="text-text-secondary"><%= t("policies.violations.none") %></p>
+    </div>
+  <% end %>
+</div>

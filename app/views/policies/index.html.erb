@@ -1,0 +1,112 @@
+<% content_for(:page_title) { t("policies.title") } %>
+
+<div class="flex items-center justify-between mb-6">
+  <div>
+    <div class="flex items-center gap-2 mb-2">
+      <%= link_to @project.name, project_path(@project), class: "text-text-secondary hover:text-text-primary" %>
+      <span class="text-text-muted">/</span>
+      <span class="text-text-primary"><%= t("policies.title") %></span>
+    </div>
+    <p class="text-text-secondary"><%= t("policies.description") %></p>
+  </div>
+  <%= link_to new_project_policy_path(@project), class: "btn-primary" do %>
+    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+    </svg>
+    <%= t("policies.new") %>
+  <% end %>
+</div>
+
+<!-- Active Violations -->
+<% if @violations.any? %>
+  <div class="card mb-6 border-critical">
+    <div class="flex items-center gap-2 mb-4">
+      <svg class="w-5 h-5 text-critical" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+      </svg>
+      <h3 class="text-lg font-semibold text-critical"><%= t("policies.active_violations") %></h3>
+    </div>
+    <div class="space-y-2">
+      <% @violations.each do |violation| %>
+        <div class="flex items-center justify-between p-3 bg-critical-bg/30 rounded-lg">
+          <div class="flex items-center gap-3">
+            <span class="<%= violation.severity_class %>"><%= violation.severity_display %></span>
+            <span class="text-text-primary"><%= violation.message %></span>
+          </div>
+          <span class="text-text-muted text-sm"><%= time_ago_in_words(violation.created_at) %> <%= t("common.ago") %></span>
+        </div>
+      <% end %>
+    </div>
+  </div>
+<% end %>
+
+<!-- Policies List -->
+<div class="card">
+  <h3 class="text-lg font-semibold text-text-primary mb-4"><%= t("policies.sections.all_policies") %></h3>
+
+  <% if @policies.any? %>
+    <div class="table-container">
+      <table class="table">
+        <thead>
+          <tr>
+            <th><%= t("policies.labels.name") %></th>
+            <th><%= t("policies.labels.type") %></th>
+            <th><%= t("policies.labels.status") %></th>
+            <th><%= t("policies.labels.violations") %></th>
+            <th><%= t("common.actions") %></th>
+          </tr>
+        </thead>
+        <tbody>
+          <% @policies.each do |policy| %>
+            <tr>
+              <td>
+                <%= link_to policy.name, project_policy_path(@project, policy), class: "text-primary hover:underline font-medium" %>
+                <% if policy.description.present? %>
+                  <p class="text-sm text-text-muted"><%= truncate(policy.description, length: 50) %></p>
+                <% end %>
+              </td>
+              <td><span class="badge"><%= policy.type_display %></span></td>
+              <td>
+                <%= button_to toggle_project_policy_path(@project, policy), method: :patch, class: "cursor-pointer" do %>
+                  <span class="badge <%= policy.enabled? ? 'badge-low' : 'badge-medium' %>">
+                    <%= policy.enabled? ? t("policies.status.enabled") : t("policies.status.disabled") %>
+                  </span>
+                <% end %>
+              </td>
+              <td>
+                <% violations_count = policy.policy_violations.unresolved.count %>
+                <% if violations_count > 0 %>
+                  <span class="badge-critical"><%= violations_count %></span>
+                <% else %>
+                  <span class="text-text-muted">0</span>
+                <% end %>
+              </td>
+              <td>
+                <div class="flex items-center gap-2">
+                  <%= link_to t("common.edit"), edit_project_policy_path(@project, policy), class: "text-primary hover:underline text-sm" %>
+                  <%= button_to project_policy_path(@project, policy),
+                      method: :delete,
+                      class: "text-critical hover:underline text-sm",
+                      data: { turbo_confirm: t("policies.messages.delete_confirm") } do %>
+                    <%= t("common.delete") %>
+                  <% end %>
+                </div>
+              </td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+  <% else %>
+    <div class="text-center py-8">
+      <svg class="w-16 h-16 text-text-muted mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+      </svg>
+      <h3 class="text-lg font-semibold text-text-primary mb-2"><%= t("policies.empty.title") %></h3>
+      <p class="text-text-secondary mb-4"><%= t("policies.empty.description") %></p>
+      <%= link_to new_project_policy_path(@project), class: "btn-primary" do %>
+        <%= t("policies.empty.create") %>
+      <% end %>
+    </div>
+  <% end %>
+</div>

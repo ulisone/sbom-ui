@@ -1,0 +1,29 @@
+<%= turbo_stream.replace dom_id(@notification) do %>
+  <div id="<%= dom_id(@notification) %>" class="flex items-start gap-4 p-4 hover:bg-surface-hover transition-colors">
+    <div class="flex-shrink-0">
+      <div class="w-10 h-10 rounded-full flex items-center justify-center bg-surface">
+        <svg class="w-5 h-5 <%= @notification.icon_class %>" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="<%= @notification.icon_path %>" />
+        </svg>
+      </div>
+    </div>
+    <div class="flex-1 min-w-0">
+      <div class="flex items-start justify-between">
+        <div>
+          <p class="font-medium text-text-primary"><%= @notification.title %></p>
+          <% if @notification.message.present? %>
+            <p class="text-sm text-text-secondary mt-1"><%= @notification.message %></p>
+          <% end %>
+        </div>
+        <span class="text-xs text-text-muted whitespace-nowrap ml-4">
+          <%= time_ago_in_words(@notification.created_at) %> <%= t("common.ago") %>
+        </span>
+      </div>
+      <div class="flex items-center gap-3 mt-2">
+        <%= link_to notification_path(@notification), class: "text-sm text-primary hover:underline" do %>
+          <%= t("notifications.view_details") %>
+        <% end %>
+      </div>
+    </div>
+  </div>
+<% end %>

@@ -1,0 +1,117 @@
+<% content_for(:page_title) { t("notification_preferences.title") } %>
+
+<div class="max-w-2xl mx-auto">
+  <div class="flex items-center gap-2 mb-6">
+    <%= link_to notifications_path, class: "text-text-secondary hover:text-text-primary" do %>
+      <%= t("notifications.title") %>
+    <% end %>
+    <span class="text-text-muted">/</span>
+    <span class="text-text-primary"><%= t("notification_preferences.title") %></span>
+  </div>
+
+  <div class="card">
+    <h2 class="text-xl font-semibold text-text-primary mb-6"><%= t("notification_preferences.title") %></h2>
+
+    <%= form_with model: @preference, url: notification_preferences_path, method: :patch do |f| %>
+      <!-- Email Notifications -->
+      <div class="mb-8">
+        <h3 class="text-lg font-medium text-text-primary mb-4"><%= t("notification_preferences.email.title") %></h3>
+
+        <div class="flex items-center justify-between p-4 bg-surface rounded-lg mb-4">
+          <div>
+            <p class="font-medium text-text-primary"><%= t("notification_preferences.email.enabled") %></p>
+            <p class="text-sm text-text-secondary"><%= t("notification_preferences.email.description") %></p>
+          </div>
+          <label class="relative inline-flex items-center cursor-pointer">
+            <%= f.check_box :email_enabled, class: "sr-only peer" %>
+            <div class="w-11 h-6 bg-gray-600 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+          </label>
+        </div>
+      </div>
+
+      <!-- Webhook Notifications -->
+      <div class="mb-8">
+        <h3 class="text-lg font-medium text-text-primary mb-4"><%= t("notification_preferences.webhook.title") %></h3>
+
+        <div class="flex items-center justify-between p-4 bg-surface rounded-lg mb-4">
+          <div>
+            <p class="font-medium text-text-primary"><%= t("notification_preferences.webhook.enabled") %></p>
+            <p class="text-sm text-text-secondary"><%= t("notification_preferences.webhook.description") %></p>
+          </div>
+          <label class="relative inline-flex items-center cursor-pointer">
+            <%= f.check_box :webhook_enabled, class: "sr-only peer", data: { action: "change->toggle#toggle", toggle_target: "checkbox" } %>
+            <div class="w-11 h-6 bg-gray-600 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+          </label>
+        </div>
+
+        <div class="space-y-4 pl-4 border-l-2 border-border">
+          <div>
+            <%= f.label :webhook_type, t("notification_preferences.webhook.type"), class: "block text-sm font-medium text-text-secondary mb-1" %>
+            <%= f.select :webhook_type,
+                NotificationPreference::WEBHOOK_TYPES.map { |t| [t("notification_preferences.webhook.types.#{t}"), t] },
+                {},
+                class: "input-field w-full" %>
+          </div>
+          <div>
+            <%= f.label :webhook_url, t("notification_preferences.webhook.url"), class: "block text-sm font-medium text-text-secondary mb-1" %>
+            <%= f.url_field :webhook_url, class: "input-field w-full", placeholder: "https://hooks.slack.com/services/..." %>
+            <p class="text-xs text-text-muted mt-1"><%= t("notification_preferences.webhook.url_hint") %></p>
+          </div>
+          <div>
+            <%= button_to t("notification_preferences.webhook.test"),
+                test_webhook_notification_preferences_path,
+                method: :post,
+                class: "btn-secondary text-sm",
+                disabled: !@preference.webhook_configured? %>
+          </div>
+        </div>
+      </div>
+
+      <!-- Notification Events -->
+      <div class="mb-8">
+        <h3 class="text-lg font-medium text-text-primary mb-4"><%= t("notification_preferences.events.title") %></h3>
+
+        <div class="space-y-3">
+          <label class="flex items-center gap-3 p-4 bg-surface rounded-lg cursor-pointer hover:bg-surface-hover transition-colors">
+            <%= f.check_box :notify_on_scan_complete, class: "w-5 h-5 rounded border-border text-primary focus:ring-primary" %>
+            <div>
+              <p class="font-medium text-text-primary"><%= t("notification_preferences.events.scan_complete") %></p>
+              <p class="text-sm text-text-secondary"><%= t("notification_preferences.events.scan_complete_desc") %></p>
+            </div>
+          </label>
+
+          <label class="flex items-center gap-3 p-4 bg-surface rounded-lg cursor-pointer hover:bg-surface-hover transition-colors">
+            <%= f.check_box :notify_on_critical_vuln, class: "w-5 h-5 rounded border-border text-primary focus:ring-primary" %>
+            <div>
+              <p class="font-medium text-text-primary"><%= t("notification_preferences.events.critical_vuln") %></p>
+              <p class="text-sm text-text-secondary"><%= t("notification_preferences.events.critical_vuln_desc") %></p>
+            </div>
+          </label>
+
+          <label class="flex items-center gap-3 p-4 bg-surface rounded-lg cursor-pointer hover:bg-surface-hover transition-colors">
+            <%= f.check_box :notify_on_high_vuln, class: "w-5 h-5 rounded border-border text-primary focus:ring-primary" %>
+            <div>
+              <p class="font-medium text-text-primary"><%= t("notification_preferences.events.high_vuln") %></p>
+              <p class="text-sm text-text-secondary"><%= t("notification_preferences.events.high_vuln_desc") %></p>
+            </div>
+          </label>
+        </div>
+      </div>
+
+      <!-- Digest Frequency -->
+      <div class="mb-8">
+        <h3 class="text-lg font-medium text-text-primary mb-4"><%= t("notification_preferences.digest.title") %></h3>
+        <%= f.select :digest_frequency,
+            NotificationPreference::DIGEST_FREQUENCIES.map { |f| [t("notification_preferences.digest.frequencies.#{f}"), f] },
+            {},
+            class: "input-field w-full" %>
+        <p class="text-xs text-text-muted mt-2"><%= t("notification_preferences.digest.description") %></p>
+      </div>
+
+      <div class="flex justify-end gap-2 pt-4 border-t border-border">
+        <%= link_to t("common.cancel"), notifications_path, class: "btn-secondary" %>
+        <%= f.submit t("common.save"), class: "btn-primary cursor-pointer" %>
+      </div>
+    <% end %>
+  </div>
+</div>

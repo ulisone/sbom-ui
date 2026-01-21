@@ -1,0 +1,83 @@
+<% content_for(:page_title) { t("notifications.title") } %>
+
+<div class="flex items-center justify-between mb-6">
+  <div>
+    <h1 class="text-2xl font-bold text-text-primary"><%= t("notifications.title") %></h1>
+    <p class="text-text-secondary mt-1">
+      <%= t("notifications.unread_count", count: @unread_count) %>
+    </p>
+  </div>
+  <div class="flex items-center gap-2">
+    <% if @unread_count > 0 %>
+      <%= button_to mark_all_as_read_notifications_path, method: :post, class: "btn-secondary" do %>
+        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+        </svg>
+        <%= t("notifications.mark_all_read") %>
+      <% end %>
+    <% end %>
+    <%= link_to edit_notification_preferences_path, class: "btn-secondary" do %>
+      <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+      </svg>
+      <%= t("notifications.settings") %>
+    <% end %>
+  </div>
+</div>
+
+<div class="card">
+  <% if @notifications.any? %>
+    <div class="divide-y divide-border">
+      <% @notifications.each do |notification| %>
+        <div id="<%= dom_id(notification) %>" class="flex items-start gap-4 p-4 <%= notification.unread? ? 'bg-primary-bg/30' : '' %> hover:bg-surface-hover transition-colors">
+          <div class="flex-shrink-0">
+            <div class="w-10 h-10 rounded-full flex items-center justify-center <%= notification.unread? ? 'bg-primary-bg' : 'bg-surface' %>">
+              <svg class="w-5 h-5 <%= notification.icon_class %>" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="<%= notification.icon_path %>" />
+              </svg>
+            </div>
+          </div>
+          <div class="flex-1 min-w-0">
+            <div class="flex items-start justify-between">
+              <div>
+                <p class="font-medium text-text-primary <%= notification.unread? ? 'font-semibold' : '' %>">
+                  <%= notification.title %>
+                </p>
+                <% if notification.message.present? %>
+                  <p class="text-sm text-text-secondary mt-1"><%= notification.message %></p>
+                <% end %>
+              </div>
+              <div class="flex items-center gap-2 ml-4">
+                <span class="text-xs text-text-muted whitespace-nowrap">
+                  <%= time_ago_in_words(notification.created_at) %> <%= t("common.ago") %>
+                </span>
+                <% if notification.unread? %>
+                  <span class="w-2 h-2 bg-primary rounded-full"></span>
+                <% end %>
+              </div>
+            </div>
+            <div class="flex items-center gap-3 mt-2">
+              <%= link_to notification_path(notification), class: "text-sm text-primary hover:underline" do %>
+                <%= t("notifications.view_details") %>
+              <% end %>
+              <% if notification.unread? %>
+                <%= button_to mark_as_read_notification_path(notification), method: :patch, class: "text-sm text-text-muted hover:text-text-primary", form: { data: { turbo_stream: true } } do %>
+                  <%= t("notifications.mark_read") %>
+                <% end %>
+              <% end %>
+            </div>
+          </div>
+        </div>
+      <% end %>
+    </div>
+  <% else %>
+    <div class="text-center py-12">
+      <svg class="w-16 h-16 text-text-muted mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+      </svg>
+      <h3 class="text-lg font-semibold text-text-primary mb-2"><%= t("notifications.empty.title") %></h3>
+      <p class="text-text-secondary"><%= t("notifications.empty.description") %></p>
+    </div>
+  <% end %>
+</div>

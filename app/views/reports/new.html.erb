@@ -1,0 +1,69 @@
+<% content_for(:page_title) { t('reports.new_report') } %>
+
+<div class="flex items-center justify-between mb-6">
+  <div>
+    <div class="flex items-center gap-2 mb-2">
+      <%= link_to projects_path, class: "text-text-secondary hover:text-text-primary" do %>
+        <%= t('projects.title') %>
+      <% end %>
+      <span class="text-text-muted">/</span>
+      <%= link_to @project.name, @project, class: "text-text-secondary hover:text-text-primary" %>
+      <span class="text-text-muted">/</span>
+      <span class="text-text-primary"><%= t('reports.new_report') %></span>
+    </div>
+    <h1 class="text-2xl font-bold text-text-primary"><%= t('reports.new_report') %></h1>
+  </div>
+</div>
+
+<div class="card max-w-2xl">
+  <%= form_with model: [@project, @report], class: "space-y-6" do |f| %>
+    <% if @report.errors.any? %>
+      <div class="alert-error">
+        <ul class="list-disc list-inside">
+          <% @report.errors.full_messages.each do |msg| %>
+            <li><%= msg %></li>
+          <% end %>
+        </ul>
+      </div>
+    <% end %>
+
+    <div>
+      <label class="label"><%= t('reports.labels.type') %></label>
+      <%= f.select :report_type, Report::REPORT_TYPES.map { |t| [I18n.t("reports.types.#{t}"), t] }, {}, class: "input" %>
+      <p class="text-text-muted text-sm mt-1"><%= t('reports.hints.type') %></p>
+    </div>
+
+    <div>
+      <label class="label"><%= t('reports.labels.format') %></label>
+      <%= f.select :format, Report::FORMATS.map { |fmt| [fmt.upcase, fmt] }, {}, class: "input" %>
+      <p class="text-text-muted text-sm mt-1"><%= t('reports.hints.format') %></p>
+    </div>
+
+    <% if @scans.any? %>
+      <div>
+        <label class="label"><%= t('reports.labels.scan') %></label>
+        <%= f.select :scan_id, @scans.map { |s| ["#{l(s.scanned_at || s.created_at, format: :short)} - #{s.vulnerability_summary[:critical] + s.vulnerability_summary[:high]} issues", s.id] }, { include_blank: t('reports.hints.latest_scan') }, class: "input" %>
+        <p class="text-text-muted text-sm mt-1"><%= t('reports.hints.scan') %></p>
+      </div>
+    <% else %>
+      <div class="alert-warning">
+        <p><%= t('reports.messages.no_scan_available') %></p>
+      </div>
+    <% end %>
+
+    <div>
+      <label class="label"><%= t('reports.labels.title') %> <span class="text-text-muted">(<%= t('common.optional') %>)</span></label>
+      <%= f.text_field :title, class: "input", placeholder: t('reports.placeholders.title') %>
+    </div>
+
+    <div>
+      <label class="label"><%= t('reports.labels.description') %> <span class="text-text-muted">(<%= t('common.optional') %>)</span></label>
+      <%= f.text_area :description, class: "input", rows: 3, placeholder: t('reports.placeholders.description') %>
+    </div>
+
+    <div class="flex items-center gap-4">
+      <%= f.submit t('reports.generate'), class: "btn-primary", disabled: @scans.empty? %>
+      <%= link_to t('common.cancel'), @project, class: "btn-secondary" %>
+    </div>
+  <% end %>
+</div>

@@ -1,0 +1,62 @@
+<% content_for(:page_title) { @report.title || t('reports.report_details') } %>
+
+<%= turbo_stream_from "report_#{@report.id}" %>
+
+<div class="flex items-center justify-between mb-6">
+  <div>
+    <div class="flex items-center gap-2 mb-2">
+      <%= link_to projects_path, class: "text-text-secondary hover:text-text-primary" do %>
+        <%= t('projects.title') %>
+      <% end %>
+      <span class="text-text-muted">/</span>
+      <%= link_to @report.project.name, @report.project, class: "text-text-secondary hover:text-text-primary" %>
+      <span class="text-text-muted">/</span>
+      <span class="text-text-primary"><%= t('reports.title') %></span>
+    </div>
+    <h1 class="text-2xl font-bold text-text-primary"><%= @report.title || @report.report_type_display %></h1>
+    <div class="flex items-center gap-3 mt-2">
+      <span class="badge bg-primary-light text-primary"><%= @report.report_type_display %></span>
+      <span class="text-text-secondary text-sm"><%= @report.format_display %></span>
+      <% if @report.generated_at %>
+        <span class="text-text-muted text-sm"><%= l(@report.generated_at, format: :long) %></span>
+      <% end %>
+    </div>
+  </div>
+
+  <div class="flex items-center gap-2">
+    <% if @report.completed? %>
+      <%= link_to download_report_path(@report), class: "btn-secondary" do %>
+        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+        </svg>
+        <%= t('reports.download') %>
+      <% end %>
+    <% end %>
+    <%= link_to @report.project, class: "btn-primary" do %>
+      <%= t('common.back') %>
+    <% end %>
+  </div>
+</div>
+
+<div id="report_content">
+  <% if @report.pending? || @report.generating? %>
+    <!-- Generating State -->
+    <div class="card text-center py-12" data-controller="report-status" data-report-status-url-value="<%= report_path(@report, format: :json) %>">
+      <div class="animate-spin w-12 h-12 border-4 border-primary border-t-transparent rounded-full mx-auto mb-4"></div>
+      <h3 class="text-lg font-medium text-text-primary mb-2"><%= t('reports.messages.generating_in_progress') %></h3>
+      <p class="text-text-secondary"><%= t('reports.messages.generating_description') %></p>
+    </div>
+  <% elsif @report.failed? %>
+    <!-- Failed State -->
+    <div class="card text-center py-12">
+      <svg class="w-12 h-12 text-critical mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+      </svg>
+      <h3 class="text-lg font-medium text-text-primary mb-2"><%= t('reports.messages.generation_failed') %></h3>
+      <p class="text-text-secondary mb-4"><%= t('reports.messages.generation_failed_description') %></p>
+    </div>
+  <% else %>
+    <!-- Report Content -->
+    <%= render "reports/#{@report.report_type}", report: @report %>
+  <% end %>
+</div>

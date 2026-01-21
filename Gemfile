@@ -38,6 +38,14 @@ gem "kaminari"
 # JSON parsing
 gem "oj"
 
+# PDF generation
+gem "prawn"
+gem "prawn-table"
+
+# Excel export
+gem "caxlsx"
+gem "caxlsx_rails"
+
 # RSpec for testing
 group :development, :test do
   gem "rspec-rails"

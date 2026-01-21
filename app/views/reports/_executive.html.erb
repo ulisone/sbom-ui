@@ -1,0 +1,161 @@
+<%# Executive Report Partial %>
+<% content = report.content.with_indifferent_access %>
+<% exec_summary = content[:executive_summary] || {} %>
+<% vuln_summary = content[:vulnerability_summary] || {} %>
+
+<!-- Executive Summary Card -->
+<div class="card mb-6">
+  <div class="flex items-start justify-between">
+    <div>
+      <h2 class="text-xl font-bold text-text-primary mb-2"><%= t('reports.sections.executive_summary') %></h2>
+      <p class="text-text-secondary"><%= exec_summary[:project_name] %></p>
+      <% if exec_summary[:scan_date] %>
+        <p class="text-text-muted text-sm mt-1"><%= t('reports.labels.scan_date') %>: <%= l(Time.parse(exec_summary[:scan_date].to_s), format: :long) rescue exec_summary[:scan_date] %></p>
+      <% end %>
+    </div>
+    <div class="text-right">
+      <div class="w-24 h-24 rounded-full flex items-center justify-center <%= risk_score_bg_class(exec_summary[:risk_score]) %>">
+        <div class="text-center">
+          <span class="text-3xl font-bold <%= risk_score_text_class(exec_summary[:risk_score]) %>"><%= exec_summary[:risk_score] || 0 %></span>
+          <p class="text-xs text-text-muted"><%= t('reports.labels.risk_score') %></p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Risk Level Indicator -->
+  <div class="mt-6 p-4 rounded-lg <%= risk_level_bg_class(exec_summary[:risk_level]) %>">
+    <div class="flex items-center gap-3">
+      <%= risk_level_icon(exec_summary[:risk_level]) %>
+      <div>
+        <p class="font-medium text-text-primary"><%= t("reports.risk_levels.#{exec_summary[:risk_level] || 'low'}") %></p>
+        <p class="text-text-secondary text-sm"><%= t("reports.risk_level_descriptions.#{exec_summary[:risk_level] || 'low'}") %></p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Key Metrics -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+  <div class="card text-center">
+    <p class="text-4xl font-bold text-text-primary"><%= exec_summary[:total_vulnerabilities] || 0 %></p>
+    <p class="text-text-secondary"><%= t('reports.labels.total_vulnerabilities') %></p>
+  </div>
+  <div class="card text-center">
+    <p class="text-4xl font-bold text-critical"><%= exec_summary[:critical_issues] || 0 %></p>
+    <p class="text-text-secondary"><%= t('reports.labels.critical_issues') %></p>
+  </div>
+  <div class="card text-center">
+    <p class="text-4xl font-bold text-low"><%= exec_summary[:actionable_items] || 0 %></p>
+    <p class="text-text-secondary"><%= t('reports.labels.actionable_items') %></p>
+  </div>
+</div>
+
+<!-- Key Findings -->
+<% if content[:key_findings].present? %>
+  <div class="card mb-6">
+    <h3 class="text-lg font-semibold text-text-primary mb-4"><%= t('reports.sections.key_findings') %></h3>
+    <div class="space-y-3">
+      <% content[:key_findings].each do |finding| %>
+        <div class="flex items-start gap-3 p-3 bg-background rounded-lg">
+          <% case finding[:type] %>
+          <% when "critical" %>
+            <svg class="w-5 h-5 text-critical flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+            </svg>
+          <% when "high" %>
+            <svg class="w-5 h-5 text-high flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
+            </svg>
+          <% else %>
+            <svg class="w-5 h-5 text-primary flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
+            </svg>
+          <% end %>
+          <p class="text-text-primary"><%= finding[:message] %></p>
+        </div>
+      <% end %>
+    </div>
+  </div>
+<% end %>
+
+<!-- Trend Summary -->
+<% if content[:trend_summary].present? && content[:trend_summary][:current_total] %>
+  <div class="card mb-6">
+    <h3 class="text-lg font-semibold text-text-primary mb-4"><%= t('reports.sections.trend_summary') %></h3>
+    <div class="flex items-center gap-6">
+      <div class="flex-1">
+        <div class="flex items-baseline gap-2">
+          <span class="text-3xl font-bold text-text-primary"><%= content[:trend_summary][:current_total] %></span>
+          <span class="text-text-secondary"><%= t('reports.labels.current') %></span>
+        </div>
+        <div class="flex items-center gap-2 mt-2">
+          <% change = content[:trend_summary][:change].to_i %>
+          <% if change > 0 %>
+            <svg class="w-5 h-5 text-critical" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7" />
+            </svg>
+            <span class="text-critical">+<%= change %> <%= t('reports.labels.from_previous') %></span>
+          <% elsif change < 0 %>
+            <svg class="w-5 h-5 text-low" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+            </svg>
+            <span class="text-low"><%= change %> <%= t('reports.labels.from_previous') %></span>
+          <% else %>
+            <span class="text-text-muted"><%= t('reports.labels.no_change') %></span>
+          <% end %>
+        </div>
+      </div>
+    </div>
+  </div>
+<% end %>
+
+<!-- Compliance Status -->
+<% if content[:compliance_status].present? %>
+  <div class="card mb-6">
+    <h3 class="text-lg font-semibold text-text-primary mb-4"><%= t('reports.sections.compliance_status') %></h3>
+    <div class="flex items-center gap-4">
+      <% if content[:compliance_status][:passing] %>
+        <div class="w-16 h-16 rounded-full bg-low-bg flex items-center justify-center">
+          <svg class="w-8 h-8 text-low" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+          </svg>
+        </div>
+        <div>
+          <p class="text-lg font-medium text-low"><%= t('reports.compliance.passing') %></p>
+          <p class="text-text-secondary"><%= t('reports.compliance.passing_description', score: content[:compliance_status][:score], threshold: content[:compliance_status][:threshold]) %></p>
+        </div>
+      <% else %>
+        <div class="w-16 h-16 rounded-full bg-critical-bg flex items-center justify-center">
+          <svg class="w-8 h-8 text-critical" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </div>
+        <div>
+          <p class="text-lg font-medium text-critical"><%= t('reports.compliance.failing') %></p>
+          <p class="text-text-secondary"><%= t('reports.compliance.failing_description', score: content[:compliance_status][:score], threshold: content[:compliance_status][:threshold]) %></p>
+        </div>
+      <% end %>
+    </div>
+  </div>
+<% end %>
+
+<!-- Top Recommendations -->
+<% if content[:recommendations].present? %>
+  <div class="card">
+    <h3 class="text-lg font-semibold text-text-primary mb-4"><%= t('reports.sections.top_recommendations') %></h3>
+    <div class="space-y-4">
+      <% content[:recommendations].first(3).each_with_index do |rec, index| %>
+        <div class="flex gap-4 p-4 bg-background rounded-lg">
+          <div class="flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center bg-primary text-white font-bold">
+            <%= index + 1 %>
+          </div>
+          <div>
+            <h4 class="font-medium text-text-primary"><%= rec[:title] %></h4>
+            <p class="text-text-secondary text-sm mt-1"><%= rec[:description] %></p>
+          </div>
+        </div>
+      <% end %>
+    </div>
+  </div>
+<% end %>
